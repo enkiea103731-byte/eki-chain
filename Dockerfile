@@ -1,7 +1,6 @@
 FROM golang:1.22 AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
 COPY . .
 RUN go mod tidy && go build -o eki-chain .
 
