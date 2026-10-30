@@ -1,31 +1,51 @@
 package main
+
 import (
- "crypto/sha256"
- "encoding/hex"
- "encoding/json"
- "fmt"
- "io"
- "log"
- "net/http"
- "strings"
- "time"
+"encoding/json"
+"log"
+"net/http"
 )
-const FIXED_ADDR = "EKI_31e3da3ae96a0af3"
-const FIXED_PRIV = "31e3da3ae96a0af3b1c2d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6"
-type Block struct{Index int; Time,Data,Prev,Hash string}
-var Chain []Block
-func main(){
- Chain=append(Chain, Block{0,time.Now().String(),"GENESIS EKI 21M 701 FIXED 31e3","",""})
- h:=sha256.Sum256([]byte(fmt.Sprint(Chain[0]))); Chain[0].Hash=hex.EncodeToString(h[:])
- fmt.Println("Carteira FIXA:",FIXED_ADDR)
- http.HandleFunc("/",func(w http.ResponseWriter, r *http.Request){
-  if r.Method=="POST"{body,_:=io.ReadAll(r.Body); s:=string(body); w.Header().Set("Content-Type","application/json"); w.Header().Set("Access-Control-Allow-Origin","*")
-   if strings.Contains(s,"eth_chainId"){w.Write([]byte(`{"jsonrpc":"2.0","id":1,"result":"0x2bd"}`)); return}
-   if strings.Contains(s,"net_version"){w.Write([]byte(`{"jsonrpc":"2.0","id":1,"result":"701"}`)); return}
-   if strings.Contains(s,"eth_blockNumber"){w.Write([]byte(fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"result":"0x%x"}`,len(Chain)))); return}
-   w.Write([]byte(`{"jsonrpc":"2.0","id":1,"result":"0x0"}`)); return
-  }
-  w.Header().Set("Access-Control-Allow-Origin","*"); json.NewEncoder(w).Encode(map[string]interface{}{"chainId":701,"name":"EKIChain","symbol":"EKI","rpc":"https://eki-chain.onrender.com","status":"Online","address":FIXED_ADDR})
- })
- log.Fatal(http.ListenAndServe(":8080",nil))
+
+const CHAIN_ID = 701
+const FEE_WALLET = "EKI_31e3da3ae96a0af3"
+
+const (
+CUSTODY_BTC = "bc1qs03n0sft8p9aqzvfn8qg8smq7afh3g30ru53vt"
+CUSTODY_ETH = "0x4DcC1EA8aaeD8fe1BdaF56694b37Adc3c2c973cf"
+CUSTODY_BNB = "0x2Ba9927F45CA699E3FD6aC0Fd352A0569DBD0E88"
+CUSTODY_SOL = "G3ERDDYZWu9gHNvQjzHep73ELMKTuXjkQDnr7MyRbenm"
+)
+
+func applyFee(a float64) (float64, float64) {
+fee := a * 0.003
+return a - fee, fee
+}
+
+func main() {
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+w.Header().Set("Content-Type", "application/json")
+json.NewEncoder(w).Encode(map[string]interface{}{
+"address": "EKI_31e3da3ae96a0af3",
+"chainId": 701,
+"name":    "EKIChain",
+"status":  "Online",
+"rpc":     "https://eki-chain.onrender.com",
+"symbol":  "EKI",
+})
+})
+
+http.HandleFunc("/bridge/deposit", func(w http.ResponseWriter, r *http.Request) {
+w.Header().Set("Content-Type", "application/json")
+toUser, fee := applyFee(1.0)
+json.NewEncoder(w).Encode(map[string]interface{}{
+"deposit":     1.0,
+"toUser":      toUser,
+"fee":         fee,
+"feeWallet":   FEE_WALLET,
+"custody_BTC": CUSTODY_BTC,
+})
+})
+
+log.Println("EKI Chain 701 rodando na 8080")
+log.Fatal(http.ListenAndServe(":8080", nil))
 }
