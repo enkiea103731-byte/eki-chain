@@ -1,3 +1,2 @@
-module ekichain
-
-go 1.22
+module eki-chain
+go 1.21
