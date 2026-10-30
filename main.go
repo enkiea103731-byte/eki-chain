@@ -15,11 +15,11 @@ balances = make(map[string]*big.Int)
 mu sync.RWMutex
 ONE_QUAD = new(big.Int).Exp(big.NewInt(10), big.NewInt(33), nil)
 CUSTODY = map[string]string{
-"BTC": "bc1qs03n0sft8p9aqzvfn8qg8smq7afh3g30ru53vt",
-"ETH": "0x4DcC1EA8aaeD8fe1BdaF56694b37Adc3c2c973cf",
 "BNB": "0x2Ba9927F45CA699E3FD6aC0Fd352A0569DBD0E88",
-"SOL": "G3ERDDYZWu9gHNvQjzHep73ELMKTuXjkQDnr7MyRbenm",
+"BTC": "bc1qs03n0sft8p9aqzvfn8qg8smq7afh3g30ru53vt",
 "EKI": "0x03664899007a53f086d545c34063e9cbfb29c9c2",
+"ETH": "0x4DcC1EA8aaeD8fe1BdaF56694b37Adc3c2c973cf",
+"SOL": "G3ERDDYZWu9gHNvQjzHep73ELMKTuXjkQDnr7MyRbenm",
 }
 )
 
@@ -29,11 +29,7 @@ func main(){
 http.HandleFunc("/", handleRoot)
 http.HandleFunc("/rpc", handleRPC)
 http.HandleFunc("/chainlist.json", handleChainlist)
-http.HandleFunc("/chain.json", handleChainlist)
-http.HandleFunc("/explorer", func(w http.ResponseWriter, r *http.Request){
-w.Header().Set("Content-Type","text/html")
-w.Write([]byte("<h1>EKI MAINNET 70101 - 1 QUATRILHAO ONLINE</h1><p>RPC: https://eki-chain.onrender.com/rpc</p>"))
-})
+http.HandleFunc("/explorer", func(w http.ResponseWriter, r *http.Request){ w.Write([]byte("EKI MAINNET 70101 ONLINE")) })
 port:=os.Getenv("PORT"); if port==""{port="10000"}
 log.Fatal(http.ListenAndServe(":"+port,nil))
 }
@@ -42,24 +38,28 @@ func handleRoot(w http.ResponseWriter, r *http.Request){
 if r.Method=="POST"{ handleRPC(w,r); return }
 w.Header().Set("Access-Control-Allow-Origin","*")
 w.Header().Set("Content-Type","application/json")
-json.NewEncoder(w).Encode(map[string]interface{}{"chainId":70101,"network":"EKI MAINNET","custody":CUSTODY,"totalSupplyWei":ONE_QUAD.String(),"chainlistFile":"https://eki-chain.onrender.com/chainlist.json"})
+json.NewEncoder(w).Encode(map[string]interface{}{
+"chainId": 70101,
+"chainIdHex": "0x11165",
+"network": "EKI MAINNET",
+"rpc": "https://eki-chain.onrender.com/rpc",
+"totalSupply": "1000000000000000",
+"totalSupplyWei": ONE_QUAD.String(),
+"custody": CUSTODY,
+"chainlistFile": "https://eki-chain.onrender.com/chainlist.json",
+"explorer": "https://eki-chain.onrender.com/explorer",
+})
 }
 
 func handleChainlist(w http.ResponseWriter, r *http.Request){
 w.Header().Set("Access-Control-Allow-Origin","*")
 w.Header().Set("Content-Type","application/json")
 json.NewEncoder(w).Encode(map[string]interface{}{
-"name": "EKI Mainnet",
-"chain": "EKI",
-"icon": "eki",
-"rpc": []string{"https://eki-chain.onrender.com/rpc"},
+"name": "EKI Mainnet", "chain": "EKI", "rpc": []string{"https://eki-chain.onrender.com/rpc"},
 "faucets": []string{},
 "nativeCurrency": map[string]interface{}{"name":"EKI","symbol":"EKI","decimals":18},
 "infoURL": "https://eki-chain.onrender.com",
-"shortName": "eki",
-"chainId": 70101,
-"networkId": 70101,
-"slip44": 1,
+"shortName": "eki", "chainId": 70101, "networkId": 70101,
 "explorers": []map[string]string{{"name":"EKI Explorer","url":"https://eki-chain.onrender.com/explorer","standard":"none"}},
 })
 }
@@ -77,7 +77,6 @@ var result interface{}
 switch req.Method {
 case "eth_chainId": result="0x11165"
 case "net_version": result="70101"
-case "eth_blockNumber": result="0x1"
 case "eth_gasPrice": result="0x3B9ACA00"
 case "eth_estimateGas": result="0x5208"
 case "eth_getTransactionCount": result="0x1"
