@@ -17,24 +17,21 @@ func applyFee(a float64) (float64,float64){fee:=a*0.003;return a-fee,fee}
 func main(){
  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
   w.Header().Set("Content-Type","application/json")
-  json.NewEncoder(w).Encode(map[string]interface{}{"address":FEE_WALLET,"chainId":CHAIN_ID,"name":"EKIChain","status":"Online","rpc":"https://eki-chain.onrender.com","symbol":"EKI"})
+  json.NewEncoder(w).Encode(map[string]interface{}{
+   "chainId":CHAIN_ID,"feeWallet":FEE_WALLET,"custody":custody,"feeRate":0.003,"status":"Online",
+  })
  })
  http.HandleFunc("/bridge/deposit", func(w http.ResponseWriter, r *http.Request){
   w.Header().Set("Content-Type","application/json")
   chain:=strings.ToUpper(r.URL.Query().Get("chain"))
   toUser,fee:=applyFee(1.0)
   if chain==""{
-   json.NewEncoder(w).Encode(map[string]interface{}{"feeRate":0.003,"feeWallet":FEE_WALLET,"custody":custody})
+   json.NewEncoder(w).Encode(map[string]interface{}{"custody":custody,"feeRate":0.003,"feeWallet":FEE_WALLET,"example":"?chain=BTC | ETH | BNB | SOL"})
    return
   }
-  addr,ok:=custody[chain]
-  if !ok{
-   w.WriteHeader(400)
-   json.NewEncoder(w).Encode(map[string]string{"error":"use BTC, ETH, BNB, SOL"})
-   return
-  }
-  json.NewEncoder(w).Encode(map[string]interface{}{"chain":chain,"custody":addr,"deposit":1.0,"toUser":toUser,"fee":fee,"feeWallet":FEE_WALLET})
+  addr:=custody[chain]
+  json.NewEncoder(w).Encode(map[string]interface{}{"chain":chain,"custody":addr,"toUser":toUser,"fee":fee,"feeWallet":FEE_WALLET})
  })
- log.Println("EKI Chain 701 rodando na 8080 com 4 cadeias")
+ log.Println("EKI Chain 701 com 4 cadeias ativo")
  log.Fatal(http.ListenAndServe(":8080", nil))
 }
