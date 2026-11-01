@@ -1,7 +1,8 @@
-const express=require("express");const {ethers}=require("ethers");const fs=require("fs");const path=require("path");const app=express();app.use(express.json());
-let blockNumber=7;let nonces={};let contracts={};const toHex=n=>"0x"+n.toString(16);
-app.get("/chainlist.json",(req,res)=>{return res.sendFile(path.resolve("./chainlist.json"))});
-app.get("/explorer",(req,res)=>{return res.sendFile(path.resolve("./chainlist.json"))});
-app.post("/rpc",async(req,res)=>{const {method,params,id}=req.body;try{if(method==="eth_blockNumber")return res.json({jsonrpc:"2.0",id,result:toHex(blockNumber)});if(method==="eth_getTransactionCount"){const a=(params[0]||"").toLowerCase();return res.json({jsonrpc:"2.0",id,result:toHex(nonces[a]||1)})}if(method==="eth_getCode"){const a=(params[0]||"").toLowerCase();return res.json({jsonrpc:"2.0",id,result:contracts[a]||"0x0"})}if(method==="eth_sendRawTransaction"){const raw=params[0];let p;try{p=ethers.utils.parseTransaction(raw)}catch(e){p={from:"0x03664899007a53F086D545c34063E9CBfb29C9C2",nonce:1,data:raw,to:null}}const from=(p.from||"").toLowerCase();const nonce=p.nonce||1;const hash=ethers.utils.keccak256(raw);if(!p.to){const cAddr=ethers.utils.getContractAddress({from,nonce}).toLowerCase();contracts[cAddr]=p.data||"0x6080604052";}nonces[from]=nonce+1;blockNumber++;return res.json({jsonrpc:"2.0",id,result:hash})}if(method==="eth_chainId")return res.json({jsonrpc:"2.0",id,result:"0x11165"});return res.json({jsonrpc:"2.0",id,result:"0x0"})}catch(e){return res.json({jsonrpc:"2.0",id,error:{message:e.message}})}});
-app.get("/",(req,res)=>{if(fs.existsSync("./chainlist.json")){try{const j=JSON.parse(fs.readFileSync("./chainlist.json","utf8"));return res.json(j)}catch(e){}}return res.json({chainId:70101,name:"EKI 70101"})});
-app.listen(process.env.PORT||10000,()=>console.log("70101 OK chainlist intacta"));
+const express=require("express");
+const app=express();
+const path=require("path");
+app.get("/chainlist.json",(req,res)=>res.sendFile(path.resolve("./chainlist.json")));
+app.get("/explorer",(req,res)=>res.sendFile(path.resolve("./chainlist.json")));
+app.get("/",(req,res)=>res.sendFile(path.resolve("./chainlist.json")));
+app.post("/rpc",(req,res)=>res.json({jsonrpc:"2.0",id:req.body.id,result:"0x11165"}));
+app.listen(process.env.PORT||10000);
