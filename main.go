@@ -45,9 +45,9 @@ func main(){
    "chainId":70101,
    "chainIdHex":"0x111D5",
    "name":"EKI 70101",
-   "rpc":[]string{"https://eki-chain.onrender.com"},
-   "explorer":"https://eki-chain.onrender.com",
-   "infoURL":"https://eki-chain.onrender.com",
+   "rpc":[]string{"https://www.eki-chain.cloud-ip.cc"},
+   "explorer":"https://www.eki-chain.cloud-ip.cc",
+   "infoURL":"https://www.eki-chain.cloud-ip.cc",
    "networkId":70101,
    "status":"Online",
   })

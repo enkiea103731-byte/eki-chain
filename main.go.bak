@@ -29,7 +29,7 @@ func main(){
       })
       return
     }
-    w.Write([]byte(`{"name":"EKIChain","chainId":701,"symbol":"EKI","rpc":"https://eki-chain.onrender.com","status":"Online"}`))
+    w.Write([]byte(`{"name":"EKIChain","chainId":701,"symbol":"EKI","rpc":"https://www.eki-chain.cloud-ip.cc","status":"Online"}`))
   })
 
   fmt.Printf("EKI Chain 701 RPC Live :%s\n", port)
