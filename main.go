@@ -48,6 +48,22 @@ func main() {
     write(w, map[string]any{"ok": true, "blocks": chain})
   })
 
+  http.HandleFunc("/mine", func(w http.ResponseWriter, r *http.Request) {
+    mu.Lock(); defer mu.Unlock()
+    wallet := r.URL.Query().Get("wallet")
+    if wallet == "" { wallet = r.URL.Query().Get("address") }
+    if wallet == "" { wallet = r.URL.Query().Get("miner") }
+    if wallet == "" {
+      write(w, map[string]any{"ok": false, "error": "falta wallet"})
+      return
+    }
+    reward := 10.0
+    balances[wallet] += reward
+    b := Block{Index: len(chain), From: "mineracao", To: wallet, Value: reward, Time: time.Now().Format(time.RFC3339)}
+    chain = append(chain, b)
+    write(w, map[string]any{"ok": true, "block": b.Index, "miner": wallet, "reward": reward, "balance": balances[wallet]})
+  })
+
   http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
     mu.Lock(); defer mu.Unlock()
     if r.URL.Query().Get("key") != KEY {
