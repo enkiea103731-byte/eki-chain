@@ -1,5 +1,4 @@
-FROM golang:1.22-alpine
+FROM python:3.11-slim
 WORKDIR /app
-COPY . .
-RUN go build -o eki
-CMD ["./eki"]
+COPY index.html .
+CMD ["python3", "-m", "http.server", "10000"]
