@@ -1,5 +1,5 @@
 services:
-    - type: web
+  - type: web
     name: eki-chain
     env: go
     plan: free

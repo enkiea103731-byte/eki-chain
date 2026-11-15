@@ -1,203 +1,354 @@
 package main
 
 import (
-  "encoding/json"
-  "fmt"
-  "math/big"
-  "net/http"
-  "os"
-  "strconv"
-  "sync"
-  "time"
+"encoding/json"
+"fmt"
+"math/big"
+"net/http"
+"os"
+"strconv"
+"sync"
+"time"
 )
 
-type Block struct {
-  Index int `json:"index"`
-  From string `json:"from"`
-  To string `json:"to"`
-  Value float64 `json:"value"`
-  Time string `json:"time"`
-  Hash string `json:"hash,omitempty"`
-}
-type Stake struct {
-  Wallet string `json:"wallet"`
-  Amount float64 `json:"amount"`
-  Until int64 `json:"until"`
+type B struct {
+Index int     `json:"index"`
+From  string  `json:"from"`
+To    string  `json:"to"`
+Value float64 `json:"value"`
+Time  string  `json:"time"`
 }
 
-var mu sync.Mutex
-var chain []Block
-var balances = map[string]float64{}
-var stakes = []Stake{}
-var lastMine = map[string]int64{}
-var totalSupply float64
-var KEY = "EKI12026SEGREDO"
-const MAX_SUPPLY = 21000000.0
-
-func save(){
-  b,_ := json.Marshal(map[string]any{"balances":balances,"chain":chain,"stakes":stakes,"totalSupply":totalSupply})
-  os.WriteFile("data.json", b, 0644)
-}
-func load(){
-  b, err := os.ReadFile("data.json")
-  if err != nil { return }
-  var d struct{
-    Balances map[string]float64 `json:"balances"`
-    Chain []Block `json:"chain"`
-    Stakes []Stake `json:"stakes"`
-    TotalSupply float64 `json:"totalSupply"`
-  }
-  if json.Unmarshal(b,&d)!=nil { return }
-  if d.Balances!=nil { balances=d.Balances }
-  if d.Chain!=nil { chain=d.Chain }
-  stakes=d.Stakes
-  totalSupply=d.TotalSupply
-}
-func write(w http.ResponseWriter, v any){
-  w.Header().Set("Content-Type","application/json")
-  w.Header().Set("Access-Control-Allow-Origin","*")
-  w.Header().Set("Access-Control-Allow-Methods","GET,POST,OPTIONS")
-  w.Header().Set("Access-Control-Allow-Headers","Content-Type")
-  json.NewEncoder(w).Encode(v)
-}
-func appendBlock(from, to string, val float64) Block {
-  b := Block{Index: len(chain), From: from, To: to, Value: val, Time: time.Now().Format(time.RFC3339), Hash: fmt.Sprintf("0x%x", time.Now().UnixNano())}
-  chain = append(chain, b)
-  save()
-  return b
-}
-func rewardAtual() float64 {
-  h := len(chain)/100000
-  r := 10.0
-  for i:=0;i<h;i++ { r=r/2 }
-  return r
+type S struct {
+Wallet string  `json:"wallet"`
+Amount float64 `json:"amount"`
+Until  int64   `json:"until"`
 }
 
-func main(){
-  load()
-  if len(chain)==0 && len(balances)==0 {
-    balances["enki71"]=1000010
-    balances["ekifee"]=0
-    totalSupply=1000010
-    appendBlock("genesis","enki71",1000000)
-    appendBlock("mineracao","enki71",10)
-  }
-  if _,ok:=balances["ekifee"]; !ok { balances["ekifee"]=0 }
+var (
+mu     sync.Mutex
+chain  []B
+bal    = map[string]float64{}
+usdt   = map[string]float64{}
+stakes []S
+last   = map[string]int64{}
+tot    float64
+KEY    = "EKI12026SEGREDO"
+)
 
-  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
-    if r.Method=="OPTIONS" { write(w, map[string]any{"ok":true}); return }
-    if r.Method=="POST" {
-      var req map[string]any
-      json.NewDecoder(r.Body).Decode(&req)
-      method,_:=req["method"].(string)
-      var result any="0x0"
-      mu.Lock()
-      switch method {
-      case "eth_chainId": result="0x111d5"
-      case "net_version": result="70101"
-      case "web3_clientVersion": result="EKI Chain/1.0.0"
-      case "net_listening": result=true
-      case "eth_blockNumber": result=fmt.Sprintf("0x%x",len(chain))
-      case "eth_gasPrice": result="0x0"
-      case "eth_maxPriorityFeePerGas": result="0x0"
-      case "eth_feeHistory": result=map[string]any{"baseFeePerGas":[]string{"0x0"},"gasUsedRatio":[]float64{0},"reward":[]any{[]string{"0x0"}},"oldestBlock":"0x0"}
-      case "eth_getBalance":
-        if p,ok:=req["params"].([]any); ok && len(p)>0 {
-          addr,_:=p[0].(string)
-          bal:=balances[addr]
-          wei:=big.NewInt(int64(bal*1000000)); wei.Mul(wei,big.NewInt(1000000000000))
-          result="0x"+wei.Text(16)
-        }
-      case "eth_getTransactionCount": result="0x0"
-      case "eth_getCode": result="0x"
-      case "eth_call": result="0x"
-      case "eth_estimateGas": result="0x5208"
-      case "eth_getBlockByNumber": result=map[string]any{"number":fmt.Sprintf("0x%x",len(chain)),"hash":fmt.Sprintf("0x%x",time.Now().UnixNano()),"timestamp":fmt.Sprintf("0x%x",time.Now().Unix()),"transactions":[]any{}}
-      }
-      mu.Unlock()
-      write(w, map[string]any{"jsonrpc":"2.0","id":req["id"],"result":result})
-      return
-    }
-    mu.Lock(); defer mu.Unlock()
-    write(w, map[string]any{"ok":true,"chain":"EKI Chain","chainId":70101,"symbol":"EKI","blocks":len(chain),"totalSupply":totalSupply,"maxSupply":MAX_SUPPLY,"reward":rewardAtual(),"feeWallet":"ekifee","feesCollected":balances["ekifee"]})
-  })
+const (
+MAX   = 21000000.0
+PRICE = 0.10
+)
 
-  http.HandleFunc("/balance", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    wallet:=r.URL.Query().Get("wallet"); if wallet=="" { wallet=r.URL.Query().Get("address") }
-    write(w, map[string]any{"ok":true,"wallet":wallet,"balance":balances[wallet],"staked":func() float64{ s:=0.0; for _,st:=range stakes{ if st.Wallet==wallet{ s+=st.Amount } }; return s}()})
-  })
-  http.HandleFunc("/blocks", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    write(w, map[string]any{"ok":true,"blocks":chain})
-  })
-  http.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    write(w, map[string]any{"ok":true,"chain":"EKI Chain","chainId":70101,"blocks":len(chain),"totalSupply":totalSupply,"maxSupply":MAX_SUPPLY,"reward":rewardAtual(),"halving":len(chain)/100000,"holders":len(balances),"feesCollected":balances["ekifee"],"price":"0.10"})
-  })
-  http.HandleFunc("/mine", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    wallet:=r.URL.Query().Get("wallet"); if wallet=="" { wallet=r.URL.Query().Get("address") }
-    if wallet=="" { write(w, map[string]any{"ok":false,"error":"falta wallet"}); return }
-    now:=time.Now().Unix()
-    if now-lastMine[wallet] < 60 { write(w, map[string]any{"ok":false,"error":"espere 60s para minerar de novo","nextIn":60-(now-lastMine[wallet])}); return }
-    reward:=rewardAtual()
-    if totalSupply+reward > MAX_SUPPLY { write(w, map[string]any{"ok":false,"error":"supply maximo atingido"}); return }
-    lastMine[wallet]=now
-    balances[wallet]+=reward; totalSupply+=reward
-    b:=appendBlock("mineracao",wallet,reward)
-    write(w, map[string]any{"ok":true,"block":b.Index,"miner":wallet,"reward":reward,"balance":balances[wallet],"totalSupply":totalSupply})
-  })
-  http.HandleFunc("/faucet", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    wallet:=r.URL.Query().Get("wallet"); if wallet=="" { wallet=r.URL.Query().Get("address") }
-    if wallet=="" { write(w, map[string]any{"ok":false,"error":"falta wallet"}); return }
-    now:=time.Now().Unix()
-    if now-lastMine[wallet] < 86400 { write(w, map[string]any{"ok":false,"error":"faucet 1x por dia"}); return }
-    lastMine[wallet]=now
-    reward:=rewardAtual()
-    balances[wallet]+=reward; totalSupply+=reward
-    b:=appendBlock("mineracao",wallet,reward)
-    write(w, map[string]any{"ok":true,"block":b.Index,"reward":reward,"balance":balances[wallet]})
-  })
-  http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    if r.URL.Query().Get("key") != KEY { write(w, map[string]any{"ok":false,"error":"sem autorizacao"}); return }
-    from:=r.URL.Query().Get("from"); to:=r.URL.Query().Get("to")
-    val,_:=strconv.ParseFloat(r.URL.Query().Get("value"),64)
-    if to=="" || val<=0 { write(w, map[string]any{"ok":false,"error":"dados invalidos"}); return }
-    fee:=val*0.01; total:=val+fee
-    if balances[from] < total { write(w, map[string]any{"ok":false,"error":"saldo insuficiente, precisa de taxa 1%"}); return }
-    balances[from]-=total; balances[to]+=val; balances["ekifee"]+=fee
-    b:=appendBlock(from,to,val)
-    write(w, map[string]any{"ok":true,"block":b.Index,"to":to,"value":val,"fee":fee,"balance":balances[to],"feesCollected":balances["ekifee"]})
-  })
-  http.HandleFunc("/stake", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    if r.URL.Query().Get("key") != KEY { write(w, map[string]any{"ok":false,"error":"sem autorizacao"}); return }
-    wallet:=r.URL.Query().Get("wallet"); val,_:=strconv.ParseFloat(r.URL.Query().Get("value"),64)
-    if balances[wallet] < val || val<=0 { write(w, map[string]any{"ok":false,"error":"saldo insuficiente"}); return }
-    balances[wallet]-=val
-    stakes=append(stakes, Stake{Wallet:wallet,Amount:val,Until:time.Now().Add(30*24*time.Hour).Unix()})
-    save()
-    write(w, map[string]any{"ok":true,"staked":val,"until":time.Now().Add(30*24*time.Hour).Format(time.RFC3339),"balance":balances[wallet]})
-  })
-  http.HandleFunc("/unstake", func(w http.ResponseWriter, r *http.Request){
-    mu.Lock(); defer mu.Unlock()
-    wallet:=r.URL.Query().Get("wallet")
-    now:=time.Now().Unix(); returned:=0.0
-    var rest []Stake
-    for _,st:=range stakes {
-      if st.Wallet==wallet && now>=st.Until {
-        reward:=st.Amount*0.12/12 // 12% ao ano / 12 = 1% por 30 dias
-        balances[wallet]+=st.Amount+reward; returned+=st.Amount+reward
-      } else { rest=append(rest,st) }
-    }
-    stakes=rest; save()
-    write(w, map[string]any{"ok":true,"returned":returned,"balance":balances[wallet]})
-  })
+func save() {
+b, _ := json.Marshal(map[string]any{
+"balances":    bal,
+"chain":       chain,
+"stakes":      stakes,
+"usdt":        usdt,
+"totalSupply": tot,
+})
+os.WriteFile("data.json", b, 0644)
+}
 
-  port:=os.Getenv("PORT"); if port=="" { port="10000" }
-  fmt.Println("EKI CHAIN PRO rodando na porta", port, "reward", rewardAtual(), "supply", totalSupply)
-  http.ListenAndServe(":"+port, nil)
+func load() {
+b, e := os.ReadFile("data.json")
+if e != nil {
+return
+}
+var d struct {
+Balances    map[string]float64 `json:"balances"`
+Chain       []B                `json:"chain"`
+Stakes      []S                `json:"stakes"`
+Usdt        map[string]float64 `json:"usdt"`
+TotalSupply float64            `json:"totalSupply"`
+}
+if json.Unmarshal(b, &d) != nil {
+return
+}
+if d.Balances != nil {
+bal = d.Balances
+}
+if d.Chain != nil {
+chain = d.Chain
+}
+if d.Stakes != nil {
+stakes = d.Stakes
+}
+if d.Usdt != nil {
+usdt = d.Usdt
+}
+tot = d.TotalSupply
+}
+
+func wr(w http.ResponseWriter, v any) {
+w.Header().Set("Content-Type", "application/json")
+w.Header().Set("Access-Control-Allow-Origin", "*")
+json.NewEncoder(w).Encode(v)
+}
+
+func blk(f, t string, v float64) B {
+b := B{len(chain), f, t, v, time.Now().Format(time.RFC3339)}
+chain = append(chain, b)
+save()
+return b
+}
+
+func rew() float64 {
+h := len(chain) / 100000
+r := 10.0
+for i := 0; i < h; i++ {
+r /= 2
+}
+return r
+}
+
+func main() {
+load()
+if len(chain) == 0 && len(bal) == 0 {
+bal["enki71"] = 1000010
+bal["ekifee"] = 0
+tot = 1000010
+blk("genesis", "enki71", 1000000)
+blk("mineracao", "enki71", 10)
+}
+if _, ok := bal["ekifee"]; !ok {
+bal["ekifee"] = 0
+}
+
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+if r.Method == "POST" {
+var req map[string]any
+json.NewDecoder(r.Body).Decode(&req)
+m, _ := req["method"].(string)
+var res any = "0x0"
+mu.Lock()
+switch m {
+case "eth_chainId":
+res = "0x111d5"
+case "net_version":
+res = "70101"
+case "eth_blockNumber":
+res = fmt.Sprintf("0x%x", len(chain))
+case "eth_getBalance":
+if p, ok := req["params"].([]any); ok && len(p) > 0 {
+a, _ := p[0].(string)
+wei := big.NewInt(int64(bal[a] * 1000000))
+wei.Mul(wei, big.NewInt(1000000000000))
+res = "0x" + wei.Text(16)
+}
+case "eth_estimateGas":
+res = "0x5208"
+}
+mu.Unlock()
+wr(w, map[string]any{"jsonrpc": "2.0", "id": req["id"], "result": res})
+return
+}
+b, e := os.ReadFile("index.html")
+if e != nil {
+w.Write([]byte("EKI online"))
+return
+}
+w.Header().Set("Content-Type", "text/html; charset=utf-8")
+w.Write(b)
+})
+
+http.HandleFunc("/balance", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+wr(w, map[string]any{"ok": true, "wallet": q, "balance": bal[q], "usdt": usdt[q]})
+})
+
+http.HandleFunc("/blocks", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+wr(w, map[string]any{"ok": true, "blocks": chain})
+})
+
+http.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+wr(w, map[string]any{
+"ok":             true,
+"cadeia":         "Cadeia EKI",
+"chainId":        70101,
+"blocos":         len(chain),
+"totalSupply":    tot,
+"maxSupply":      MAX,
+"recompensa":     rew(),
+"feeWallet":      "ekifee",
+"taxasColetadas": bal["ekifee"],
+"simbolo":        "EKI",
+"price":          PRICE,
+"pix":            "32468719816",
+"pixName":        "JOAO ANDRE ALVES",
+})
+})
+
+http.HandleFunc("/mine", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+if q == "" {
+wr(w, map[string]any{"ok": false, "error": "falta wallet"})
+return
+}
+now := time.Now().Unix()
+if now-last[q] < 60 {
+wr(w, map[string]any{"ok": false, "error": "espere 60s"})
+return
+}
+rw := rew()
+if tot+rw > MAX {
+wr(w, map[string]any{"ok": false, "error": "supply maximo"})
+return
+}
+last[q] = now
+bal[q] += rw
+tot += rw
+b := blk("mineracao", q, rw)
+wr(w, map[string]any{"ok": true, "block": b.Index, "reward": rw, "balance": bal[q]})
+})
+
+http.HandleFunc("/buy", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+brl, _ := strconv.ParseFloat(r.URL.Query().Get("brl"), 64)
+if brl <= 0 {
+wr(w, map[string]any{"ok": false, "error": "valor invalido"})
+return
+}
+eki := brl / PRICE * 0.99
+fee := brl / PRICE * 0.01
+if tot+eki > MAX {
+wr(w, map[string]any{"ok": false, "error": "supply maximo"})
+return
+}
+bal[q] += eki
+bal["ekifee"] += fee
+tot += eki
+b := blk("venda", q, eki)
+wr(w, map[string]any{"ok": true, "order": b.Index, "eki": eki, "fee": fee, "balance": bal[q]})
+})
+
+http.HandleFunc("/sell", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+eki, _ := strconv.ParseFloat(r.URL.Query().Get("eki"), 64)
+if eki <= 0 || bal[q] < eki {
+wr(w, map[string]any{"ok": false, "error": "saldo insuficiente"})
+return
+}
+fee := eki * 0.01
+net := eki - fee
+brl := net * PRICE
+bal[q] -= eki
+bal["ekifee"] += fee
+usdt[q] += brl
+tot -= eki
+blk(q, "venda", eki)
+wr(w, map[string]any{"ok": true, "usdt": brl, "fee": fee, "balance": bal[q]})
+})
+
+http.HandleFunc("/swap", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+v, _ := strconv.ParseFloat(r.URL.Query().Get("value"), 64)
+from := r.URL.Query().Get("from")
+if from == "EKI" {
+if bal[q] < v || v <= 0 {
+wr(w, map[string]any{"ok": false, "error": "saldo EKI insuficiente"})
+return
+}
+fee := v * 0.01
+out := (v - fee) * PRICE
+bal[q] -= v
+bal["ekifee"] += fee
+usdt[q] += out
+blk(q, "swap", v)
+wr(w, map[string]any{"ok": true, "out": out})
+} else {
+if usdt[q] < v || v <= 0 {
+wr(w, map[string]any{"ok": false, "error": "saldo USDT insuficiente"})
+return
+}
+fee := v / PRICE * 0.01
+net := (v / PRICE) * 0.99
+usdt[q] -= v
+bal[q] += net
+bal["ekifee"] += fee
+tot += net
+blk("swap", q, net)
+wr(w, map[string]any{"ok": true, "out": net})
+}
+})
+
+http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+f := r.URL.Query().Get("from")
+t := r.URL.Query().Get("to")
+v, _ := strconv.ParseFloat(r.URL.Query().Get("value"), 64)
+if v <= 0 {
+wr(w, map[string]any{"ok": false, "error": "valor invalido"})
+return
+}
+fee := v * 0.01
+if bal[f] < v+fee {
+wr(w, map[string]any{"ok": false, "error": "saldo insuficiente"})
+return
+}
+bal[f] -= v + fee
+bal[t] += v
+bal["ekifee"] += fee
+b := blk(f, t, v)
+wr(w, map[string]any{"ok": true, "block": b.Index, "fee": fee})
+})
+
+http.HandleFunc("/stake", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+v, _ := strconv.ParseFloat(r.URL.Query().Get("value"), 64)
+if bal[q] < v || v <= 0 {
+wr(w, map[string]any{"ok": false, "error": "saldo insuficiente"})
+return
+}
+bal[q] -= v
+stakes = append(stakes, S{q, v, time.Now().Add(30 * 24 * time.Hour).Unix()})
+save()
+wr(w, map[string]any{"ok": true, "staked": v})
+})
+
+http.HandleFunc("/unstake", func(w http.ResponseWriter, r *http.Request) {
+mu.Lock()
+defer mu.Unlock()
+q := r.URL.Query().Get("wallet")
+now := time.Now().Unix()
+ret := 0.0
+var rest []S
+for _, st := range stakes {
+if st.Wallet == q && now >= st.Until {
+bal[q] += st.Amount * 1.01
+ret += st.Amount * 1.01
+} else {
+rest = append(rest, st)
+}
+}
+stakes = rest
+save()
+wr(w, map[string]any{"ok": true, "returned": ret, "balance": bal[q]})
+})
+
+port := os.Getenv("PORT")
+if port == "" {
+port = "10000"
+}
+fmt.Println("EKI porta", port)
+http.ListenAndServe(":"+port, nil)
 }
