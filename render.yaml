@@ -2,6 +2,7 @@ services:
     - type: web
     name: eki-chain
     env: go
-    buildCommand: go build -o eki
-    startCommand: ./eki
     plan: free
+    buildCommand: go build -o app .
+    startCommand: ./app
+    healthCheckPath: /stats
