@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EKI CHAIN — 21M Supply | Chain 70101</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050508;color:#fff;font-family:system-ui,Arial}header{padding:28px 18px;text-align:center;background:radial-gradient(600px 300px at 50% 0%,#7c3aed55,transparent)}
+h1{font-size:42px;margin:0;background:linear-gradient(90deg,#facc15,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{opacity:.75;margin-top:8px}.wrap{max-width:980px;margin:auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.card{background:#12121c;border:1px solid #26263a;border-radius:16px;padding:16px;text-align:center}.card b{font-size:24px;color:#facc15}.card span{opacity:.6;font-size:12px}
+.box{background:#12121c;border:1px solid #26263a;border-radius:18px;padding:18px;margin:14px 0}
+input{width:100%;padding:13px;border-radius:12px;border:1px solid #333;background:#08080f;color:#fff;margin:8px 0}
+button{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;cursor:pointer;margin:6px 0}
+.gold{background:linear-gradient(90deg,#facc15,#f59e0b);color:#000}.violet{background:#7c3aed;color:#fff}.ghost{background:#1e1e2e;color:#fff}
+#blocks{font-size:13px;line-height:1.6;max-height:300px;overflow:auto}
+.tag{display:inline-block;background:#1e1e2e;border:1px solid #333;padding:6px 10px;border-radius:99px;font-size:12px;margin:2px}
+a{color:#22d3ee}
+</style></head><body>
+<header><div style="font-size:13px;letter-spacing:3px">● EKI CHAIN • LIVE</div>
+<h1>EKI CHAIN</h1><div class="sub">Chain 70101 • 21M Supply • Taxa 1% • Halving • Staking 12% a.a.</div>
+<div style="margin-top:14px"><span class="tag">RPC: https://eki-chain.onrender.com</span> <span class="tag">ChainId: 70101</span> <span class="tag">Symbol: EKI</span></div></header>
+<div class="wrap">
+<div class="grid">
+<div class="card"><b id="price">R$ 0,10</b><br><span>PREÇO EKI</span></div>
+<div class="card"><b id="supply">-</b><br><span>TOTAL SUPPLY</span></div>
+<div class="card"><b id="blocksN">-</b><br><span>BLOCOS</span></div>
+<div class="card"><b id="reward">-</b><br><span>RECOMPENSA</span></div>
+<div class="card"><b id="fees">-</b><br><span>TAXAS COLETADAS</span></div>
+</div>
+
+<div class="box"><h2>💰 Minha Carteira</h2>
+<input id="wallet" placeholder="Sua carteira - ex: enki71 ou 0x..." value="enki71">
+<button class="gold" onclick="verSaldo()">VER MEU SALDO</button>
+<button class="violet" onclick="minerar()">⛏️ MINERAR 10 EKI</button>
+<div id="saldo" style="margin-top:10px;font-size:18px">Saldo: -</div>
+<div id="msg" style="opacity:.8;font-size:13px"></div>
+</div>
+
+<div class="box"><h2>🔗 Adicionar na Carteira</h2>
+<p style="opacity:.7;font-size:14px">Funciona em MetaMask, Trust, Rabby, qualquer carteira EVM.</p>
+<button class="gold" onclick="addChain()">+ ADICIONAR EKI CHAIN NA CARTEIRA</button>
+<button class="ghost" onclick="copiar()">COPIAR RPC</button>
+</div>
+
+<div class="box"><h2>💸 Enviar EKI</h2>
+<input id="to" placeholder="Para quem? ex: amigo123">
+<input id="val" type="number" placeholder="Quanto? ex: 10">
+<button class="violet" onclick="alert('Envio é feito pelo dono via /send com chave. Chama no suporte para enviar. Taxa 1% automática.')">ENVIAR (TAXA 1%)</button>
+<p style="font-size:12px;opacity:.6">Taxa de 1% vai para a carteira da chain ekifee. É assim que a chain lucra.</p>
+</div>
+
+<div class="box"><h2>🔒 Staking - 12% ao ano</h2>
+<p style="opacity:.7;font-size:14px">Trava por 30 dias e ganha 1% no mês. Segura o preço.</p>
+<button class="gold" onclick="alert('Para fazer staking, fala com o dono: /stake?wallet=SUA_CARTEIRA&value=QUANTO&key=CHAVE')">FAZER STAKING</button>
+</div>
+
+<div class="box"><h2>🧱 Explorer - Blocos Reais</h2><div id="blocks">Carregando...</div></div>
+
+<div class="box" style="text-align:center"><h2>🚀 Por que segurar EKI?</h2><p style="opacity:.8">21M máximo. A cada 100.000 blocos a recompensa cai pela metade.<br>Quem minera cedo, ganha mais. Quem segura, ganha staking.</p></div>
+</div>
+<script>
+const API="https://eki-chain.onrender.com";
+async function load(){
+  try{
+    let s=await (await fetch(API+"/stats")).json();
+    document.getElementById("supply").innerText=s.totalSupply.toLocaleString("pt-BR");
+    document.getElementById("blocksN").innerText=s.blocks;
+    document.getElementById("reward").innerText=s.reward+" EKI";
+    document.getElementById("fees").innerText=s.feesCollected;
+    let b=await (await fetch(API+"/blocks")).json();
+    let arr=b.blocks||[];
+    document.getElementById("blocks").innerHTML=arr.slice(-10).reverse().map(x=>`#${x.index} • ${x.from} → ${x.to} • <b>${x.value} EKI</b> • ${x.time||''}`).join("<br>")||"Nenhum bloco ainda";
+  }catch(e){ document.getElementById("blocks").innerText="Render acordando, recarrega em 10s..."; }
+}
+async function verSaldo(){
+  let w=document.getElementById("wallet").value.trim(); if(!w) return alert("Digita sua carteira");
+  let r=await (await fetch(API+"/balance?wallet="+encodeURIComponent(w))).json();
+  document.getElementById("saldo").innerText="Saldo: "+r.balance+" EKI";
+}
+async function minerar(){
+  let w=document.getElementById("wallet").value.trim(); if(!w) return alert("Digita sua carteira");
+  document.getElementById("msg").innerText="Minerando...";
+  let r=await (await fetch(API+"/mine?wallet="+encodeURIComponent(w))).json();
+  if(r.ok){ document.getElementById("msg").innerText="✅ Bloco #"+r.block+" minerado! +"+r.reward+" EKI. Novo saldo: "+r.balance; verSaldo(); load(); }
+  else document.getElementById("msg").innerText="⏳ "+(r.error||"Tenta de novo");
+}
+async function addChain(){
+  if(!window.ethereum) return alert("Abre no navegador com MetaMask ou Trust");
+  try{
+    await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x111d5",chainName:"EKI Chain",nativeCurrency:{name:"EKI",symbol:"EKI",decimals:18},rpcUrls:[API],blockExplorerUrls:[API+"/blocks"]}]});
+    alert("EKI Chain adicionada!");
+  }catch(e){ alert("Erro: "+e.message); }
+}
+function copiar(){ navigator.clipboard.writeText(API); alert("RPC copiado: "+API); }
+load(); setInterval(load,15000);
+</script></body></html>
