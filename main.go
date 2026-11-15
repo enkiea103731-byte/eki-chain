@@ -1,26 +1,137 @@
 package main
-import(_ "embed";"encoding/json";"fmt";"math/big";"net/http";"os";"strconv";"sync";"time")
-//go:embed index.html
-var htmlPage []byte
-type B struct{Index int `json:"index"`;From string `json:"from"`;To string `json:"to"`;Value float64 `json:"value"`;Time string `json:"time"`}
-type S struct{Wallet string `json:"wallet"`;Amount float64 `json:"amount"`;Until int64 `json:"until"`}
-var mu sync.Mutex;var chain []B;var bal=map[string]float64{};var usdt=map[string]float64{};var stakes []S;var last=map[string]int64{};var tot float64
-const MAX=21000000.0;const PRICE=0.10
-func save(){b,_:=json.Marshal(map[string]any{"balances":bal,"chain":chain,"stakes":stakes,"usdt":usdt,"totalSupply":tot});os.WriteFile("data.json",b,0644)}
-func load(){b,e:=os.ReadFile("data.json");if e!=nil{return};var d struct{Balances map[string]float64 `json:"balances"`;Chain []B `json:"chain"`;Stakes []S `json:"stakes"`;Usdt map[string]float64 `json:"usdt"`;TotalSupply float64 `json:"totalSupply"`};if json.Unmarshal(b,&d)!=nil{return};if d.Balances!=nil{bal=d.Balances};if d.Chain!=nil{chain=d.Chain};if d.Stakes!=nil{stakes=d.Stakes};if d.Usdt!=nil{usdt=d.Usdt};tot=d.TotalSupply}
-func wr(w http.ResponseWriter,v any){w.Header().Set("Content-Type","application/json");w.Header().Set("Access-Control-Allow-Origin","*");json.NewEncoder(w).Encode(v)}
-func blk(f,t string,v float64)B{b:=B{len(chain),f,t,v,time.Now().Format(time.RFC3339)};chain=append(chain,b);save();return b}
-func rew()float64{h:=len(chain)/100000;r:=10.0;for i:=0;i<h;i++{r/=2};return r}
-func main(){load();if len(chain)==0&&len(bal)==0{bal["enki71"]=1000010;bal["ekifee"]=0;tot=1000010;blk("genesis","enki71",1000000);blk("mineracao","enki71",10)};if _,ok:=bal["ekifee"];!ok{bal["ekifee"]=0}
-http.HandleFunc("/",func(w http.ResponseWriter,r *http.Request){if r.Method=="POST"{var req map[string]any;json.NewDecoder(r.Body).Decode(&req);m,_:=req["method"].(string);var res any="0x0";mu.Lock();switch m{case "eth_chainId":res="0x111d5";case "net_version":res="70101";case "eth_blockNumber":res=fmt.Sprintf("0x%x",len(chain));case "eth_getBalance":if p,ok:=req["params"].([]any);ok&&len(p)>0{a,_:=p[0].(string);wei:=big.NewInt(int64(bal[a]*1000000));wei.Mul(wei,big.NewInt(1000000000000));res="0x"+wei.Text(16)};case "eth_estimateGas":res="0x5208"};mu.Unlock();wr(w,map[string]any{"jsonrpc":"2.0","id":req["id"],"result":res});return};w.Header().Set("Content-Type","text/html; charset=utf-8");w.Write(htmlPage)})
-http.HandleFunc("/balance",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");wr(w,map[string]any{"ok":true,"wallet":q,"balance":bal[q],"usdt":usdt[q]})})
-http.HandleFunc("/blocks",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();wr(w,map[string]any{"ok":true,"blocks":chain})})
-http.HandleFunc("/stats",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();wr(w,map[string]any{"ok":true,"cadeia":"Cadeia EKI","chainId":70101,"blocos":len(chain),"totalSupply":tot,"maxSupply":MAX,"recompensa":rew(),"feeWallet":"ekifee","taxasColetadas":bal["ekifee"],"simbolo":"EKI","price":PRICE,"pix":"32468719816","pixName":"JOAO ANDRE ALVES"})})
-http.HandleFunc("/mine",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");if q==""{wr(w,map[string]any{"ok":false,"error":"falta wallet"});return};now:=time.Now().Unix();if now-last[q]<60{wr(w,map[string]any{"ok":false,"error":"espere 60s"});return};rw:=rew();if tot+rw>MAX{wr(w,map[string]any{"ok":false,"error":"supply maximo"});return};last[q]=now;bal[q]+=rw;tot+=rw;b:=blk("mineracao",q,rw);wr(w,map[string]any{"ok":true,"block":b.Index,"reward":rw,"balance":bal[q]})})
-http.HandleFunc("/buy",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");brl,_:=strconv.ParseFloat(r.URL.Query().Get("brl"),64);if brl<=0{wr(w,map[string]any{"ok":false,"error":"valor invalido"});return};eki:=brl/PRICE*0.99;fee:=brl/PRICE*0.01;if tot+eki>MAX{wr(w,map[string]any{"ok":false,"error":"supply maximo"});return};bal[q]+=eki;bal["ekifee"]+=fee;tot+=eki;b:=blk("venda",q,eki);wr(w,map[string]any{"ok":true,"order":b.Index,"eki":eki,"fee":fee,"balance":bal[q]})})
-http.HandleFunc("/sell",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");eki,_:=strconv.ParseFloat(r.URL.Query().Get("eki"),64);if eki<=0||bal[q]<eki{wr(w,map[string]any{"ok":false,"error":"saldo insuficiente"});return};fee:=eki*0.01;net:=eki-fee;brl:=net*PRICE;bal[q]-=eki;bal["ekifee"]+=fee;usdt[q]+=brl;tot-=eki;blk(q,"venda",eki);wr(w,map[string]any{"ok":true,"usdt":brl,"fee":fee,"balance":bal[q]})})
-http.HandleFunc("/swap",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");v,_:=strconv.ParseFloat(r.URL.Query().Get("value"),64);from:=r.URL.Query().Get("from");if from=="EKI"{if bal[q]<v||v<=0{wr(w,map[string]any{"ok":false,"error":"saldo EKI insuficiente"});return};fee:=v*0.01;out:=(v-fee)*PRICE;bal[q]-=v;bal["ekifee"]+=fee;usdt[q]+=out;blk(q,"swap",v);wr(w,map[string]any{"ok":true,"out":out})}else{if usdt[q]<v||v<=0{wr(w,map[string]any{"ok":false,"error":"saldo USDT insuficiente"});return};fee:=v/PRICE*0.01;net:=(v/PRICE)*0.99;usdt[q]-=v;bal[q]+=net;bal["ekifee"]+=fee;tot+=net;blk("swap",q,net);wr(w,map[string]any{"ok":true,"out":net})}})
-http.HandleFunc("/send",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();f:=r.URL.Query().Get("from");t:=r.URL.Query().Get("to");v,_:=strconv.ParseFloat(r.URL.Query().Get("value"),64);if v<=0{wr(w,map[string]any{"ok":false,"error":"valor invalido"});return};fee:=v*0.01;if bal[f]<v+fee{wr(w,map[string]any{"ok":false,"error":"saldo insuficiente"});return};bal[f]-=v+fee;bal[t]+=v;bal["ekifee"]+=fee;b:=blk(f,t,v);wr(w,map[string]any{"ok":true,"block":b.Index,"fee":fee})})
-http.HandleFunc("/stake",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");v,_:=strconv.ParseFloat(r.URL.Query().Get("value"),64);if bal[q]<v||v<=0{wr(w,map[string]any{"ok":false,"error":"saldo insuficiente"});return};bal[q]-=v;stakes=append(stakes,S{q,v,time.Now().Add(30*24*time.Hour).Unix()});save();wr(w,map[string]any{"ok":true,"staked":v})})
-http.HandleFunc("/unstake",func(w http.ResponseWriter,r *http.Request){mu.Lock();defer mu.Unlock();q:=r.URL.Query().Get("wallet");now:=time.Now().Unix();ret:=0.0;var rest []S;for _,st:=range stakes{if st.Wallet==q&&now>=st.Until{bal[q]+=st.Amount*1.01;ret+=st.Amount*1.01}else{rest=append(rest,st)}};stakes=rest;save();wr(w,map[string]any{"ok":true,"returned":ret,"balance":bal[q]})})
-port:=os.Getenv("PORT");if port==""{port="10000"};fmt.Println("EKI porta",port);http.ListenAndServe(":"+port,nil)}
+
+import (
+  "crypto/sha256"
+  "encoding/hex"
+  "encoding/json"
+  "fmt"
+  "net/http"
+  "os"
+  "strings"
+  "sync"
+  "time"
+)
+
+type Block struct {
+  Index int `json:"index"`
+  Timestamp string `json:"time"`
+  Data string `json:"data"`
+  PrevHash string `json:"prev"`
+  Hash string `json:"hash"`
+  Nonce int `json:"nonce"`
+}
+type Pedido struct {
+  ID int `json:"id"`
+  Nome string `json:"nome"`
+  Valor float64 `json:"valor"`
+  EKI float64 `json:"eki"`
+  Status string `json:"status"`
+}
+type Chain struct {
+  Blocks []Block `json:"blocks"`
+  Balances map[string]float64 `json:"balances"`
+  Pedidos []Pedido `json:"pedidos"`
+}
+
+const DIFFICULTY = 3
+const REWARD = 10.0
+const PRECO = 0.10
+const FILE = "chain.json"
+const PIX_CHAVE = "32468719816"
+const ADMIN_KEY = "enki71admin"
+
+var mu sync.Mutex
+
+func calcHash(b Block) string {
+  r := fmt.Sprintf("%d%s%s%s%d", b.Index, b.Timestamp, b.Data, b.PrevHash, b.Nonce)
+  h := sha256.Sum256([]byte(r))
+  return hex.EncodeToString(h[:])
+}
+func load() Chain {
+  data, err := os.ReadFile(FILE)
+  if err != nil {
+    g := Block{0, time.Now().String(), "GENESIS EKI", "", "", 0}
+    g.Hash = calcHash(g)
+    return Chain{Blocks: []Block{g}, Balances: map[string]float64{}, Pedidos: []Pedido{}}
+  }
+  var c Chain
+  json.Unmarshal(data, &c)
+  if c.Balances == nil { c.Balances = map[string]float64{} }
+  return c
+}
+func save(c Chain) {
+  data, _ := json.Marshal(c)
+  os.WriteFile(FILE, data, 0644)
+}
+func mineLoop() {
+  for {
+    mu.Lock()
+    c := load()
+    prev := c.Blocks[len(c.Blocks)-1]
+    nb := Block{prev.Index+1, time.Now().String(), "Minerado por enki71", prev.Hash, "", 0}
+    prefix := strings.Repeat("0", DIFFICULTY)
+    tentativas := 0
+    for {
+      nb.Nonce++
+      tentativas++
+      nb.Hash = calcHash(nb)
+      if strings.HasPrefix(nb.Hash, prefix) { break }
+    }
+    c.Blocks = append(c.Blocks, nb)
+    c.Balances["enki71"] += REWARD
+    save(c)
+    fmt.Printf("Block %d MINERADO! Hash %s Nonce %d Tentativas %d Saldo enki71: %.2f\n", nb.Index, nb.Hash[:12], nb.Nonce, tentativas, c.Balances["enki71"])
+    mu.Unlock()
+    time.Sleep(1 * time.Second)
+  }
+}
+func main() {
+  go mineLoop()
+  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    mu.Lock(); c := load(); mu.Unlock()
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprintf(w, `<h1>EKI - REAL</h1><p>Blocos: %d | Minerando 24/7 | Dificuldade %d | Preco: R$ %.2f por EKI</p><p>PIX: <b>%s</b></p><p>Saldo enki71: %.2f EKI</p><hr><h3>COMPRAR</h3><form action="/comprar" method="POST">Nome: <input name="nome"><br>Valor R$: <input name="valor" type="number" step="0.01"><br><button>GERAR PEDIDO PIX</button></form><hr><h3>PEDIDOS</h3>`, len(c.Blocks), DIFFICULTY, PRECO, PIX_CHAVE, c.Balances["enki71"])
+    for _, p := range c.Pedidos {
+      fmt.Fprintf(w, `#%d %s - R$ %.2f = %.2f EKI - %s <a href="/confirmar?id=%d&key=%s">CONFIRMAR (so voce)</a><br>`, p.ID, p.Nome, p.Valor, p.EKI, p.Status, p.ID, ADMIN_KEY)
+    }
+  })
+  http.HandleFunc("/comprar", func(w http.ResponseWriter, r *http.Request) {
+    nome := r.FormValue("nome")
+    var valor float64
+    fmt.Sscanf(r.FormValue("valor"), "%f", &valor)
+    if nome == "" || valor <= 0 { http.Redirect(w, r, "/", 302); return }
+    mu.Lock()
+    c := load()
+    id := len(c.Pedidos)+1
+    eki := valor / PRECO
+    c.Pedidos = append(c.Pedidos, Pedido{id, nome, valor, eki, "AGUARDANDO PIX"})
+    save(c)
+    mu.Unlock()
+    w.Header().Set("Content-Type", "text/html; charset=utf-8")
+    fmt.Fprintf(w, `<h1>PEDIDO #%d CRIADO</h1><p>%s, pague <b>R$ %.2f</b> no PIX <b>%s</b></p><p>Voce vai receber <b>%.2f EKI</b></p><p>Depois de pagar, me manda o comprovante no WhatsApp. Eu confirmo aqui.</p><a href="/">VOLTAR</a>`, id, nome, valor, PIX_CHAVE, eki)
+  })
+  http.HandleFunc("/confirmar", func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.Query().Get("key") != ADMIN_KEY { fmt.Fprint(w, "Sem permissao"); return }
+    var id int
+    fmt.Sscanf(r.URL.Query().Get("id"), "%d", &id)
+    mu.Lock()
+    c := load()
+    for i := range c.Pedidos {
+      if c.Pedidos[i].ID == id && c.Pedidos[i].Status == "AGUARDANDO PIX" {
+        c.Pedidos[i].Status = "PAGO"
+        c.Balances[c.Pedidos[i].Nome] += c.Pedidos[i].EKI
+      }
+    }
+    save(c)
+    mu.Unlock()
+    http.Redirect(w, r, "/", 302)
+  })
+  http.HandleFunc("/balance", func(w http.ResponseWriter, r *http.Request) {
+    mu.Lock(); c := load(); mu.Unlock()
+    fmt.Fprintf(w, "Saldo de %s: %.2f EKI", r.URL.Query().Get("nome"), c.Balances[r.URL.Query().Get("nome")])
+  })
+  port := os.Getenv("PORT")
+  if port == "" { port = "10000" }
+  fmt.Println("Site no ar na porta", port, "- Minerando 24/7")
+  http.ListenAndServe(":"+port, nil)
+}

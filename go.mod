@@ -1,3 +1,3 @@
-module eki-chain
+module eki71coin
 
-go 1.21
+go 1.22
