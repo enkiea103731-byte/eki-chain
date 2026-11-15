@@ -1,7 +1,5 @@
 services:
     - type: web
     name: eki-chain
-    env: go
-    buildCommand: go build -o eki
-    startCommand: ./eki
+    env: docker
     plan: free
