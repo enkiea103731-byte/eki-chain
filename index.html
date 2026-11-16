@@ -27,3 +27,7 @@ async function loadStats(){const r=await fetch(API+'/stats').then(r=>r.json());d
 loadStats();
 if(window.ethereum){window.ethereum.request({method:'eth_accounts'}).then(a=>{if(a.length){user=a[0];document.getElementById('addr').innerText='✅ '+user;loadBal();}});}
 </script></body></html>
+<script>
+const EKI_CHAIN = { chainId: "0x111d5", chainName: "Cadeia EKI", nativeCurrency: { name: "EKI", symbol: "EKI", decimals: 18 }, rpcUrls: ["https://main.cloud-ip.cc"], blockExplorerUrls: ["https://main.cloud-ip.cc"] };
+const EKI_CONTRACTS = { EKI: "0x227A5639865EeF7C053AC937d169448B4178bf52", WEKI: "0x9096ff1C3FC2487396fA88BF9Fd4085DC2f38619", FACTORY: "0xBA218e9C339D43599eD8B4D56C0aB406a7d33e79", ROUTER: "0xc5018b51BE6e2D72E5758a5dCaAAf0027fdd7e65" };
+</script>

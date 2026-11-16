@@ -1,0 +1,1 @@
+{"name":"eki-chain","version":"2.0.0","description":"Cadeia EKI 70101","scripts":{"start":"npx serve site -l $PORT"},"dependencies":{"serve":"^14.0.0"}}

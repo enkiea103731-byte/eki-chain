@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EKI CHAIN - MAINNET 70101</title>
+<style>*{box-sizing:border-box}body{background:#070707;color:#fff;font-family:Arial;margin:0;padding:12px;text-align:center}
+.logo{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FFD700,#FF8C00);margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:38px;color:#000;font-weight:bold}
+h1{color:#FFD700;margin:0}.badge{background:#1a2b00;color:#7CFC00;padding:5px 12px;border-radius:20px;font-size:12px;display:inline-block;margin:6px}
+.card{background:#141414;border:1px solid #333;border-radius:16px;padding:14px;margin:12px auto;max-width:480px;text-align:left}
+button{width:100%;padding:14px;border:0;border-radius:12px;font-weight:bold;font-size:16px;margin:6px 0;cursor:pointer}
+.y{background:#FFD700;color:#000}.p{background:#8b5cf6;color:#fff}.d{background:#222;color:#fff;border:1px solid #555}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#000;color:#fff;margin:6px 0}
+.small{font-size:13px;color:#aaa;word-break:break-all}.gold{color:#FFD700}</style></head><body>
+<div class="logo">E</div><h1>EKI CHAIN</h1><span class="badge">● MAINNET 70101 - REAL</span><p>Supply Fixo: 1.000.000 $EKI</p>
+<div class="card"><b>💰 SUA CARTEIRA</b><h2 id="bal" class="gold">0.00 $EKI</h2><p id="addr" class="small">Não conectada</p><p id="staked" class="small">Staked: 0 $EKI | APY 12%</p>
+<button class="y" onclick="connect()">🔌 CONECTAR TRUST / METAMASK</button><button class="d" onclick="addChain()">➕ ADICIONAR REDE 70101</button><p id="msg" class="small"></p></div>
+<div class="card"><b>🎁 AIRDROP MAINNET - 1x POR CARTEIRA</b><p class="small">10 $EKI real, só uma vez.</p><button class="p" onclick="claim()">PEGAR MEUS 10 $EKI</button><p id="claimMsg" class="small"></p></div>
+<div class="card"><b>🔒 STAKING 12% AO ANO</b><input id="stakeAmt" type="number" placeholder="Qtd para travar"><button class="y" onclick="stake()">TRAVAR E GANHAR 12%</button><p id="stakeMsg" class="small"></p></div>
+<div class="card"><b>📤 TRANSFERIR $EKI REAL</b><input id="to" placeholder="Para: 0x..."><input id="amt" type="number" placeholder="Qtd"><button class="p" onclick="transfer()">ENVIAR</button><p id="txMsg" class="small"></p></div>
+<div class="card"><b>📊 EXPLORER MAINNET</b><p id="stats" class="small">Carregando...</p><button class="d" onclick="loadStats()">🔄 ATUALIZAR EXPLORER</button></div>
+<script>
+let user='';const API=location.origin;
+async function addChain(){try{if(!window.ethereum) return alert('Abra DENTRO da Trust: Descobrir > eki-chain.onrender.com');await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x111D5',chainName:'EKI Chain MAINNET',nativeCurrency:{name:'EKI',symbol:'EKI',decimals:18},rpcUrls:['https://eki-chain.onrender.com/'],blockExplorerUrls:['https://eki-chain.onrender.com/']}]});document.getElementById('msg').innerText='✅ Rede 70101 adicionada!';}catch(e){document.getElementById('msg').innerText='Erro: '+e.message;}}
+async function connect(){try{if(!window.ethereum){document.getElementById('msg').innerText='⚠️ Abra DENTRO da Trust: Descobrir > Cole o link';alert('Abra DENTRO da Trust:\n1. Trust > Descobrir\n2. Digite: eki-chain.onrender.com');return;}const a=await window.ethereum.request({method:'eth_requestAccounts'});user=a[0];try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x111D5'}]});}catch(e){await addChain();}document.getElementById('addr').innerText='✅ '+user;document.getElementById('msg').innerText='✅ Conectado na MAINNET 70101';loadBal();}catch(e){document.getElementById('msg').innerText='Erro: '+e.message;}}
+async function loadBal(){if(!user) return;const r=await fetch(API+'/balance/'+user).then(r=>r.json());document.getElementById('bal').innerText=r.balance.toFixed(2)+' $EKI';document.getElementById('staked').innerText='Staked: '+r.staked.toFixed(2)+' $EKI | APY 12%';}
+async function claim(){if(!user) return alert('Conecte primeiro');const r=await fetch(API+'/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:user})}).then(r=>r.json());document.getElementById('claimMsg').innerText=r.ok?'✅ '+r.msg:'❌ '+r.error;loadBal();loadStats();}
+async function stake(){if(!user) return alert('Conecte primeiro');const amt=document.getElementById('stakeAmt').value;const r=await fetch(API+'/stake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:user,amount:parseFloat(amt)})}).then(r=>r.json());document.getElementById('stakeMsg').innerText=r.ok?'✅ Travado! Staked: '+r.staked:'❌ '+r.error;loadBal();}
+async function transfer(){if(!user) return alert('Conecte primeiro');const to=document.getElementById('to').value,amt=document.getElementById('amt').value;const r=await fetch(API+'/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:user,to:to,amount:parseFloat(amt)})}).then(r=>r.json());document.getElementById('txMsg').innerText=r.ok?'✅ Enviado! Saldo: '+r.from_balance:'❌ '+r.error;loadBal();}
+async function loadStats(){const r=await fetch(API+'/stats').then(r=>r.json());document.getElementById('stats').innerText='Bloco: '+r.block+' | Holders: '+r.holders+' | Circulando: '+r.circulating+' / '+r.total_supply+' | Staked: '+r.staked_total;}
+loadStats();
+if(window.ethereum){window.ethereum.request({method:'eth_accounts'}).then(a=>{if(a.length){user=a[0];document.getElementById('addr').innerText='✅ '+user;loadBal();}});}
+</script></body></html>
+<script>
+const EKI_CHAIN = { chainId: "0x111d5", chainName: "Cadeia EKI", nativeCurrency: { name: "EKI", symbol: "EKI", decimals: 18 }, rpcUrls: ["https://main.cloud-ip.cc"], blockExplorerUrls: ["https://main.cloud-ip.cc"] };
+const EKI_CONTRACTS = { EKI: "0x227A5639865EeF7C053AC937d169448B4178bf52", WEKI: "0x9096ff1C3FC2487396fA88BF9Fd4085DC2f38619", FACTORY: "0xBA218e9C339D43599eD8B4D56C0aB406a7d33e79", ROUTER: "0xc5018b51BE6e2D72E5758a5dCaAAf0027fdd7e65" };
+</script>

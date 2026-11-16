@@ -1,2 +1,4 @@
-eki
-chain.json
+node_modules/
+.env
+*.log
+eki-chain
