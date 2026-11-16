@@ -1,4 +1,4 @@
 FROM python:3.11-slim
 WORKDIR /app
-COPY index.html .
-CMD ["python3", "-m", "http.server", "10000"]
+COPY index.html server.py ./
+CMD ["python3", "server.py"]
