@@ -1,8 +1,14 @@
-FROM node:20-alpine
+FROM golang:1.22-alpine AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY go.mod ./
+COPY main.go ./
+COPY *.json ./
+RUN go build -o eki main.go
+FROM alpine:latest
+WORKDIR /app
+COPY --from=build /app/eki ./
+COPY --from=build /app/*.json ./
 COPY site ./site
-COPY contracts.json eki.json ./
+COPY index.html ./
 EXPOSE 10000
-CMD ["npx","serve","site","-l","10000"]
+CMD ["./eki"]
