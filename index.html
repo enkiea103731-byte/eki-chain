@@ -1,128 +1,79 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$EKI - Minerar Enki71</title>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EKI CHAIN - Minerar $EKI</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-  body{background:#000;color:#fff;text-align:center;padding:15px}
-  .coin{width:150px;height:150px;border-radius:50%;border:3px solid #FFD700;box-shadow:0 0 30px #FFD700;object-fit:cover}
-  h1{color:#FFD700;font-size:42px;margin:5px 0}
-  .sub{font-weight:bold;line-height:1.4}
-  .live{color:#00ff88;font-size:12px;margin:10px 0}
-  .card{background:#111;border:1px solid #222;border-radius:15px;padding:15px;margin:15px 0}
-  .card h2{color:#FFD700;margin-bottom:10px}
-  .price{font-size:32px;font-weight:bold;text-align:left}
-  .mcap{font-size:12px;color:#aaa;text-align:left}
-  .btn{background:#FFD700;color:#000;border:none;padding:15px;width:100%;border-radius:25px;font-weight:bold;font-size:16px;cursor:pointer;margin:8px 0}
-  .btn:disabled{background:#555;color:#999}
-  .btn2{background:#1a1a1a;color:#FFD700;border:1px solid #FFD700;padding:12px;width:100%;border-radius:25px;font-weight:bold;cursor:pointer}
-  .miner-box{background:linear-gradient(180deg,#1a1500,#000);border:2px solid #FFD700;border-radius:20px;padding:20px;margin:15px 0}
-  .balance{font-size:38px;color:#FFD700;font-weight:bold}
-  .hash{color:#00ff88;font-size:14px;margin:5px 0}
-  .progress{height:12px;background:#333;border-radius:10px;overflow:hidden;margin:10px 0}
-  .bar{height:100%;background:#FFD700;width:0%;transition:0.3s}
-  .contract{background:#1a1a1a;padding:12px;border-radius:10px;font-size:11px;word-break:break-all;margin-top:10px}
-  .footer{font-size:11px;color:#888;margin-top:20px;line-height:1.6}
-</style>
-</head>
-<body>
-
-<img src="https://i.imgur.com/EXEMPLO-MOEDA.png" class="coin" onerror="this.src='https://cryptologos.cc/logos/solana-sol-logo.png'">
-<h1>$EKI</h1>
-<p class="sub">1º blockchain do mundo<br>criada a partir do S.O Android<br>100% Brasileira 🇧🇷</p>
-<p class="live">• AO VIVO • SINCRONIZADO COM DEX • <span id="clock">17:10:23</span></p>
+body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;margin:0;padding:15px}
+.logo{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#FFD700,#FF8C00);margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:40px}
+h1{color:#FFD700;margin:5px}.card{background:#141414;border:1px solid #333;border-radius:15px;padding:15px;margin:12px auto;max-width:480px}
+button{width:100%;padding:14px;border:0;border-radius:12px;font-weight:bold;font-size:16px;margin:6px 0;cursor:pointer}
+.yellow{background:#FFD700;color:#000}.purple{background:#8b5cf6;color:#fff}.dark{background:#222;color:#fff;border:1px solid #444}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#000;color:#fff;margin:6px 0;box-sizing:border-box}
+#addr{word-break:break-all;color:#7CFC00;font-size:13px}
+</style></head><body>
+<div class="logo">E</div><h1>EKI CHAIN</h1><p>Chain 70101 | $EKI | 100% Brasileira</p>
 
 <div class="card">
-  <h2>DEX AO VIVO</h2>
-  <p style="font-size:11px;color:#aaa">dexscreener</p><br>
-  <p class="price">$0.0<sub>5</sub>2507 <span style="font-size:14px">0%</span></p>
-  <p class="mcap">≈ 2,506.69 MCAP • $EKI / SOL</p><br>
-  <button class="btn" onclick="window.open('https://pump.fun/coin/DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump','_blank')">COMPRAR / VENDER $EKI</button>
+<b>💰 SEU SALDO MINERADO</b><h2 id="bal" style="color:#FFD700">0.00 $EKI</h2>
+<p id="addr">Carteira não conectada</p>
+<p id="status" style="color:#aaa">Conecte qualquer carteira abaixo</p>
+<button class="yellow" onclick="startMine()">▶ INICIAR MINERAÇÃO</button>
+<button class="dark" onclick="stopMine()">⏹ PARAR</button>
+<p id="mineInfo">Hash: 0 | Velocidade: 1.00 $EKI / hora</p>
 </div>
 
-<div class="miner-box">
-  <h2>⛏️ MINERAR $EKI</h2>
-  <p style="font-size:12px;color:#ccc">Deixe minerando e ganhe $EKI de verdade</p>
-  <br>
-  <p>SEU SALDO MINERADO</p>
-  <div class="balance"><span id="mined">0.00</span> $EKI</div>
-  <p class="hash">⚡ Hashrate: <span id="hash">0</span> H/s • 100 $EKI / hora</p>
-  <div class="progress"><div class="bar" id="bar"></div></div>
-  <p style="font-size:12px">Meta para sacar: <b>1.000 $EKI</b> • <span id="pct">0%</span></p>
-  <button class="btn" id="mineBtn" onclick="toggleMine()">▶ INICIAR MINERAÇÃO</button>
-  <button class="btn2" id="claimBtn" onclick="claim()" disabled>💰 SACAR $EKI (mín. 1.000)</button>
-  <p style="font-size:11px;color:#aaa;margin-top:10px" id="walletStatus">Carteira não conectada</p>
-  <button class="btn2" onclick="connectWallet()">🔗 CONECTAR PHANTOM</button>
+<div class="card"><b>🔌 CONECTAR CARTEIRA - TODAS</b>
+<button class="yellow" onclick="connectEVM('MetaMask')">🦊 MetaMask</button>
+<button class="yellow" onclick="connectEVM('Trust Wallet')">🛡️ Trust Wallet</button>
+<button class="yellow" onclick="connectEVM('Coinbase')">🔵 Coinbase Wallet</button>
+<button class="purple" onclick="connectSolana('Phantom')">👻 Phantom</button>
+<button class="purple" onclick="connectSolana('Solflare')">☀️ Solflare</button>
+<button class="dark" onclick="connectAny()">🌐 QUALQUER OUTRA CARTEIRA</button>
+<button class="dark" onclick="disconnect()">❌ Desconectar</button>
 </div>
 
-<div class="card">
-  <h2>TOKEN OFICIAL</h2>
-  <div class="contract" onclick="navigator.clipboard.writeText('DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump');alert('Copiado!')">
-    DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump<br>
-    <span style="color:#FFD700">TOCAR PARA COPIAR</span>
-  </div>
-  <p style="font-size:11px;margin-top:10px;color:#aaa">Carteira Piscina:<br>A54tn5JBBMv7o85p3nXHf349fn5NbkAr6yJqbHwAXHsa</p>
-</div>
+<div class="card"><b>📤 Enviar $EKI</b>
+<input id="to" placeholder="Endereço destino 0x..."><input id="amt" type="number" placeholder="Quantidade">
+<button class="yellow" onclick="sendEKI()">ENVIAR AGORA</button>
+<p id="sendMsg"></p></div>
 
-<p class="footer">
-  $EKI - Enki71<br>
-  © 2026 Enki71 - Todos os Direitos Reservados<br>
-  © 2026 $EKI Chain - Todos os Direitos Autorais Reservados<br><br>
-  $EKI Base Solana • DexScreener •<br>
-  Criado no Brasil - Ibirá - SP • 22/10/2026
-</p>
+<div class="card"><b>🔁 Swap $EKI / USDT</b>
+<input id="swapAmt" type="number" placeholder="Qtd $EKI"><button class="purple" onclick="swap()">TROCAR POR USDT (Simulado)</button><p id="swapMsg"></p></div>
+
+<div class="card"><b>📦 Últimos Blocos</b><p id="blocks">Bloco #70101 - Minerado agora</p></div>
 
 <script>
-let mined = parseFloat(localStorage.getItem('eki_mined')||0);
-let mining = false;
-let interval;
-let wallet = null;
-
-function update(){
-  document.getElementById('mined').innerText = mined.toFixed(2);
-  let pct = Math.min(100, (mined/1000)*100);
-  document.getElementById('bar').style.width = pct+'%';
-  document.getElementById('pct').innerText = pct.toFixed(1)+'%';
-  document.getElementById('claimBtn').disabled = mined < 1000;
-}
-update();
-
-function toggleMine(){
-  if(!wallet){ alert('Conecta a Phantom primeiro!'); return; }
-  mining = !mining;
-  document.getElementById('mineBtn').innerText = mining ? '⏸ PAUSAR MINERAÇÃO' : '▶ INICIAR MINERAÇÃO';
-  document.getElementById('hash').innerText = mining ? '1.250' : '0';
-  if(mining){
-    interval = setInterval(()=>{
-      mined += 100/3600; // 100 por hora
-      localStorage.setItem('eki_mined', mined);
-      update();
-    },1000);
-  } else { clearInterval(interval); }
-}
-
-async function connectWallet(){
+let bal = parseFloat(localStorage.getItem('eki_bal')||'0');
+let mining=false, timer=null, hashes=0, userAddr='';
+const EKI_CHAIN={chainId:'0x111D5',chainName:'EKI Chain',nativeCurrency:{name:'EKI',symbol:'EKI',decimals:18},rpcUrls:['https://eki-chain.onrender.com/'],blockExplorerUrls:['https://eki-chain.onrender.com/']};
+function render(){document.getElementById('bal').innerText=bal.toFixed(2)+' $EKI';}
+render();
+async function connectEVM(name){
   try{
-    const resp = await window.solana.connect();
-    wallet = resp.publicKey.toString();
-    document.getElementById('walletStatus').innerText = 'Conectado: '+wallet.slice(0,4)+'...'+wallet.slice(-4);
-  }catch(e){ alert('Instala a Phantom e tenta de novo'); }
+    if(!window.ethereum){ alert(name+' não encontrada. Abra o app da '+name+' e abra o site DENTRO do navegador dela (DApp Browser).'); window.open('https://metamask.app.link/dapp/eki-chain.onrender.com/','_blank'); return; }
+    const acc=await window.ethereum.request({method:'eth_requestAccounts'});
+    userAddr=acc[0];
+    try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x111D5'}]}); }catch(e){ if(e.code===4902){ await window.ethereum.request({method:'wallet_addEthereumChain',params:[EKI_CHAIN]}); } }
+    document.getElementById('addr').innerText='✅ '+name+': '+userAddr;
+    document.getElementById('status').innerText='Conectado na EKI Chain 70101';
+  }catch(e){ alert('Erro: '+e.message); }
 }
-
-function claim(){
-  if(mined < 1000) return;
-  let msg = `SOLICITAÇÃO DE SAQUE $EKI\nCarteira: ${wallet}\nValor: ${mined.toFixed(2)} $EKI\n\nEnvie para o admin pagar.`;
-  // Abre WhatsApp / copia
-  navigator.clipboard.writeText(msg);
-  alert('Pedido copiado! Manda esse texto pro admin no WhatsApp pra ele te pagar os '+mined.toFixed(2)+' $EKI. Saldo zerado.');
-  mined = 0;
-  localStorage.setItem('eki_mined',0);
-  update();
+async function connectSolana(name){
+  try{
+    const prov = window.solana || window.phantom?.solana;
+    if(!prov || !prov.isPhantom){ alert(name+' não encontrada. Abra o site dentro do app da '+name+'.'); return; }
+    const r=await prov.connect(); userAddr=r.publicKey.toString();
+    document.getElementById('addr').innerText='✅ '+name+' (Solana): '+userAddr;
+    document.getElementById('status').innerText='Conectado via Solana';
+  }catch(e){ alert('Erro: '+e.message); }
 }
-
-setInterval(()=>{ document.getElementById('clock').innerText = new Date().toLocaleTimeString('pt-BR'); },1000);
-</script>
-</body>
-</html><!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EKI CHAIN - PRO</title><style>*{box-sizing:border-box}body{margin:0;background:#050508;color:#fff;font-family:system-ui,Arial}header{padding:22px 14px;text-align:center}h1{font-size:38px;margin:0;color:#facc15}.wrap{max-width:800px;margin:auto;padding:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:#12121c;border:1px solid #333;border-radius:14px;padding:12px;text-align:center}.card b{font-size:20px;color:#facc15}.box{background:#12121c;border:1px solid #333;border-radius:16px;padding:16px;margin:12px 0}input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#08080f;color:#fff;margin:6px 0}button{width:100%;padding:12px;border:0;border-radius:10px;font-weight:800;cursor:pointer;margin:5px 0}.g{background:#facc15;color:#000}.v{background:#7c3aed;color:#fff}.d{background:#1e1e2e;color:#fff}.pixbox{background:#08080f;border:1px dashed #facc15;border-radius:12px;padding:12px;text-align:center}.status{background:#1e1e2e;padding:10px;border-radius:10px;text-align:center;font-size:14px;margin:10px 0;color:#facc15}</style></head><body><header><div style="letter-spacing:3px;font-size:11px">● EKI CHAIN • LIVE • 70101</div><h1>EKI CHAIN</h1><div>21M Max • Taxa 1% • Staking 12% a.a. • R$ 0,10</div></header><div class="wrap"><div class="grid"><div class="card"><b id="supply">-</b><br>SUPPLY</div><div class="card"><b id="blocksN">-</b><br>BLOCOS</div><div class="card"><b id="reward">-</b><br>RECOMPENSA</div><div class="card"><b>R$ 0,10</b><br>PREÇO</div></div><div id="msg" class="status">Pronto para operar</div><div class="box"><h3>👛 Minha Carteira</h3><div style="background:#08080f;border:1px solid #333;border-radius:12px;padding:12px;text-align:center"><div id="meuEnd" style="font-size:13px;word-break:break-all;opacity:.8">-</div><div id="meuSaldo" style="font-size:22px;font-weight:800;color:#facc15;margin:8px 0">0 EKI | 0 USDT</div><div id="meuQR"></div><button class="g" onclick="copiarMeuEnd()">📋 COPIAR ENDEREÇO</button><button class="d" onclick="mostrarQRReceber()">📷 QR PARA RECEBER</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><button class="v" onclick="criarCarteira()">✨ NOVA CARTEIRA</button><button class="d" onclick="importar()">📥 IMPORTAR / CONECTAR</button></div><button class="d" onclick="addChain()">🦊 ADICIONAR REDE NA METAMASK</button></div><div class="box"><h3>💸 Enviar EKI</h3><input id="paraEnd" placeholder="Endereço ou nome do destinatário"><input id="valorEnvio" type="number" placeholder="Quantidade de EKI"><button class="g" onclick="enviar()">ENVIAR AGORA</button></div><div class="box"><h3>🛒 Comprar EKI com PIX</h3><div class="pixbox"><div style="font-size:12px;opacity:.7">CHAVE PIX - JOÃO ANDRÉ ALVES</div><div style="font-size:20px;font-weight:800;margin:4px 0">32468719816</div><button class="g" onclick="copiarPix()">📋 COPIAR CHAVE PIX</button><div id="qrcode" style="margin:10px auto"></div></div><input id="brl" type="number" placeholder="Valor em R$ (ex: 50)"><button class="g" onclick="comprar()">GERAR QR PIX E PEDIDO</button><button class="d" onclick="abrirWhats()">💬 ENVIAR COMPROVANTE NO WHATSAPP</button></div><div class="box"><h3>⛏️ Minerar & Staking</h3><button class="v" onclick="minerar()">⛏️ MINERAR RECOMPENSA (A CADA 60s)</button><input id="stakeVal" type="number" placeholder="Valor EKI para Staking (1% ao mês)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="g" onclick="fazerStake()">🔒 TRAVAR STAKE</button><button class="d" onclick="resgatarStake()">🔓 RESGATAR STAKE</button></div></div><div class="box"><h3>🔄 Swap & Venda</h3><input id="sw" type="number" placeholder="Quantidade"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="g" onclick="swap('EKI')">EKI → USDT</button><button class="d" onclick="swap('USDT')">USDT → EKI</button></div><button class="v" onclick="vender()">💸 VENDER EKI POR USDT</button></div><div class="box"><h3>🧱 Últimos Blocos</h3><div id="blocks" style="font-size:13px;line-height:1.6">Carregando...</div></div></div><script>const API="";const PIX_KEY="32468719816";const WHATS_QR="https://wa.me";let W=localStorage.getItem("eki_wallet")||"";function gerarEnd(){let h="0123456789abcdef",o="0x";for(let i=0;i<40;i++)o+=h[Math.floor(Math.random()*16)];return o}function avisar(t){document.getElementById("msg").innerText=t}function init(){if(!W){W=gerarEnd();localStorage.setItem("eki_wallet",W)}atualizar()}function criarCarteira(){if(!confirm("Gerar nova carteira? Salve seu endereço atual antes!"))return;W=gerarEnd();localStorage.setItem("eki_wallet",W);avisar("✨ Nova carteira criada!");atualizar()}async function importar(){if(window.ethereum&&confirm("Conectar MetaMask?")){try{let a=await window.ethereum.request({method:"eth_requestAccounts"});W=a;localStorage.setItem("eki_wallet",W);atualizar();return}catch(e){}}let v=prompt("Cole seu endereço ou nome:");if(v&&v.trim()){W=v.trim();localStorage.setItem("eki_wallet",W);atualizar()}}function copiarMeuEnd(){navigator.clipboard.writeText(W);avisar("📋 Endereço copiado!")}function mostrarQRReceber(){document.getElementById("meuQR").innerHTML="<img src='https://qrserver.com"+encodeURIComponent(W)+"' style='background:#fff;padding:8px;border-radius:12px;margin:8px 0'>"}async function atualizar(){document.getElementById("meuEnd").innerText=W;try{let r=await(await fetch(API+"/balance?wallet="+encodeURIComponent(W))).json();document.getElementById("meuSaldo").innerText=(r.balance||0).toFixed(2)+" EKI | "+(r.usdt||0).toFixed(2)+" USDT";let s=await(await fetch(API+"/stats")).json();document.getElementById("supply").innerText=Number(s.totalSupply).toLocaleString("pt-BR");document.getElementById("blocksN").innerText=s.blocos;document.getElementById("reward").innerText=s.recompensa+" EKI";let b=await(await fetch(API+"/blocks")).json();document.getElementById("blocks").innerHTML=(b.blocks||[]).slice(-8).reverse().map(x=>"#"+x.index+" | "+x.from.slice(0,10)+" → "+x.to.slice(0,10)+" <b>"+x.value+" EKI</b>").join("<br>")}catch(e){}}async function enviar(){let para=document.getElementById("paraEnd").value.trim();let v=document.getElementById("valorEnvio").value;if(!para||!v)return avisar("⚠️ Preencha destinatário e valor.");let r=await(await fetch(API+"/send?from="+encodeURIComponent(W)+"&to="+encodeURIComponent(para)+"&value="+v)).json();avisar(r.ok?"✅ Enviado no Bloco #"+r.block:"❌ "+r.error);atualizar()}function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}}return c.toString(16).toUpperCase().padStart(4,"0")}function emv(id,val){return id+val.length.toString().padStart(2,"0")+val}function pixPayload(v){let tx="EKI"+Date.now().toString().slice(-8);let gui=emv("00","BR.GOV.BCB.PIX")+emv("01",PIX_KEY);let p=emv("00","02")+emv("26",gui)+emv("52","0000")+emv("53","986")+emv("54",v.toFixed(2))+emv("58","BR")+emv("59","JOAO ANDRE ALVES")+emv("60","IBIRA")+emv("62",emv("05",tx));let f=p+"6304";return f+crc16(f)}function copiarPix(){navigator.clipboard.writeText(PIX_KEY);avisar("📋 Chave PIX copiada!")}function abrirWhats(){window.open(WHATS_QR,"_blank")}async function comprar(){let v=parseFloat(document.getElementById("brl").value||"0");if(!v||v<=0)return avisar("⚠️ Digite um valor em R$");let code=pixPayload(v);document.getElementById("qrcode").innerHTML="<img src='https://qrserver.com"+encodeURIComponent(code)+"' style='background:#fff;padding:8px;border-radius:12px'><br>Pague R$ "+v.toFixed(2)+" e envie o comprovante";let r=await(await fetch(API+"/buy?wallet="+encodeURIComponent(W)+"&brl="+v)).json();avisar(r.ok?"✅ Pedido #"+r.order+" gerado! Envie o comprovante no WhatsApp.":"❌ "+r.error);atualizar()}async function minerar(){let r=await(await fetch(API+"/mine?wallet="+encodeURIComponent(W))).json();avisar(r.ok?"✅ Minerado +"+r.reward+" EKI (Bloco #"+r.block+")":"⏳ "+r.error);atualizar()}async function fazerStake(){let v=document.getElementById("stakeVal").value;let r=await(await fetch(API+"/stake?wallet="+encodeURIComponent(W)+"&value="+v)).json();avisar(r.ok?"🔒 Stake de "+r.staked+" EKI ativado!":"❌ "+r.error);atualizar()}async function resgatarStake(){let r=await(await fetch(API+"/unstake?wallet="+encodeURIComponent(W))).json();avisar(r.returned>0?"🔓 Resgatado "+r.returned+" EKI!":"⏳ Nenhum stake vencido.");atualizar()}async function swap(from){let v=document.getElementById("sw").value;let r=await(await fetch(API+"/swap?wallet="+encodeURIComponent(W)+"&from="+from+"&value="+v)).json();avisar(r.ok?"✅ Swap: "+r.out.toFixed(2):"❌ "+r.error);atualizar()}async function vender(){let v=document.getElementById("sw").value;let r=await(await fetch(API+"/sell?wallet="+encodeURIComponent(W)+"&eki="+v)).json();avisar(r.ok?"✅ Vendeu "+r.usdt.toFixed(2)+" USDT!":"❌ "+r.error);atualizar()}async function addChain(){if(!window.ethereum)return avisar("⚠️ Abra com MetaMask");await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x111d5",chainName:"EKI Chain",nativeCurrency:{name:"EKI",symbol:"EKI",decimals:18},rpcUrls:[location.origin],blockExplorerUrls:[location.origin]}]})}init();</script></body></html>
+async function connectAny(){
+  if(window.ethereum) return connectEVM('Carteira EVM');
+  if(window.solana) return connectSolana('Carteira Solana');
+  alert('Nenhuma carteira detectada. Abra esse site DENTRO do app da sua carteira: MetaMask > Navegador > eki-chain.onrender.com');
+}
+function disconnect(){ userAddr=''; document.getElementById('addr').innerText='Carteira não conectada'; document.getElementById('status').innerText='Desconectado'; }
+function startMine(){ if(mining) return; mining=true; document.getElementById('mineInfo').innerText='Minerando...'; timer=setInterval(()=>{ hashes++; bal+=0.00027; localStorage.setItem('eki_bal',bal); render(); document.getElementById('mineInfo').innerText='Hash: '+hashes+' | Minerando... +'+bal.toFixed(4)+' $EKI'; document.getElementById('blocks').innerText='Bloco #'+(70101+hashes)+' - Minerado agora'; },1000); }
+function stopMine(){ mining=false; clearInterval(timer); document.getElementById('mineInfo').innerText='Parado. Total: '+bal.toFixed(2)+' $EKI'; }
+function sendEKI(){ const to=document.getElementById('to').value, amt=parseFloat(document.getElementById('amt').value); if(!userAddr) return alert('Conecte a carteira primeiro'); if(!to||!amt) return alert('Preencha destino e valor'); if(amt>bal) return alert('Saldo insuficiente'); bal-=amt; localStorage.setItem('eki_bal',bal); render(); document.getElementById('sendMsg').innerText='✅ Enviado '+amt+' $EKI para '+to.slice(0,10)+'...'; }
+function swap(){ const a=parseFloat(document.getElementById('swapAmt').value); if(!a) return alert('Digite a quantidade'); document.getElementById('swapMsg').innerText='✅ '+a+' $EKI = $'+(a*0.10).toFixed(2)+' USDT (simulado, taxa 0%)'; }
+</script></body></html>
