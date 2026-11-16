@@ -1,0 +1,1 @@
+# PRO - sem dependencias externas, so Python puro
