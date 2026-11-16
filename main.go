@@ -147,5 +147,6 @@ fmt.Fprintf(w, "Saldo de %s: %.2f EKI", nome, c.Saldos[nome])
 port := os.Getenv("PORT")
 if port == "" { port = "10000" }
 fmt.Println("Site no ar na porta", port, "- Minerando 24/7 - Anti-fraude ON")
-http.ListenAndServe(":"+port, nil)
+http.HandleFunc("/rpc", rpcHandler)
+	http.ListenAndServe(":"+port, nil)
 }
