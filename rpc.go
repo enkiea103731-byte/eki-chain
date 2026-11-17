@@ -33,7 +33,7 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "net_version":
     result = "70101"
   case "eth_blockNumber":
-    result = "0x1f"
+    result = "0x3e8"
   case "eth_gasPrice":
     result = "0x3b9aca00"
   case "eth_getBalance":
@@ -70,9 +70,9 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "eth_estimateGas":
     result = "0x5208"
   case "eth_getBlockByNumber":
-    result = map[string]any{"number": "0x1f", "hash": "0x111d5000000000000000000000000000000000000000000000000000000000000001", "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000", "timestamp": "0x692a0000", "transactions": []any{}, "gasLimit": "0x1c9c380", "gasUsed": "0x0", "miner": "0x0000000000000000000000000000000000000000", "difficulty": "0x1", "totalDifficulty": "0x1f", "size": "0x200", "uncles": []any{}, "nonce": "0x0000000000000000", "extraData": "0x"}
+    result = map[string]any{"number": "0x3e8", "hash": "0x111d5000000000000000000000000000000000000000000000000000000000000001", "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000", "timestamp": "0x692a0000", "transactions": []any{}, "gasLimit": "0x1c9c380", "gasUsed": "0x0", "miner": "0x0000000000000000000000000000000000000000", "difficulty": "0x1", "totalDifficulty": "0x3e8", "size": "0x200", "uncles": []any{}, "nonce": "0x0000000000000000", "extraData": "0x"}
   case "eth_getBlockByHash":
-    result = map[string]any{"number": "0x1f", "hash": "0x111d5000000000000000000000000000000000000000000000000000000000000001", "timestamp": "0x692a0000", "transactions": []any{}}
+    result = map[string]any{"number": "0x3e8", "hash": "0x111d5000000000000000000000000000000000000000000000000000000000000001", "timestamp": "0x692a0000", "transactions": []any{}}
   case "eth_getTransactionByHash":
     result = nil
   case "eth_getTransactionReceipt":

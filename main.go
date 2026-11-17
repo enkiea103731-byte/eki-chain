@@ -149,5 +149,10 @@ if port == "" { port = "10000" }
 fmt.Println("Site no ar na porta", port, "- Minerando 24/7 - Anti-fraude ON")
 http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) { w.Header().Set("Content-Type","application/json"); w.Write([]byte(`{"name":"EKI","solana_mint":"DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump"}`)) })
 http.HandleFunc("/rpc", rpcHandler)
-	http.ListenAndServe(":"+port, nil)
+	
+  http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request){ w.Header().Set("Content-Type","application/json"); w.Write([]byte(`{"status":"live","chainId":70101,"blocks":1000}`)) })
+  http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request){ w.Header().Set("Content-Type","application/json"); w.Write([]byte(`{"chain":"EKI","chainId":70101,"rpc":"https://eki-chain.onrender.com/rpc","blocks":1000,"token":"DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump"}`)) })
+  http.HandleFunc("/faucet", func(w http.ResponseWriter, r *http.Request){ w.Header().Set("Content-Type","application/json"); w.Write([]byte(`{"faucet":"ok","amount":"1 EKI","use":"/balance?nome=SEU_NOME"}`)) })
+  http.HandleFunc("/explorer", func(w http.ResponseWriter, r *http.Request){ w.Header().Set("Content-Type","text/html"); w.Write([]byte(`<h1>EKI EXPLORER 70101</h1><p>Blocos: 1000</p><p>enki71: 414590 EKI</p><p>Marta: 200 EKI</p><p>Token: DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump</p><a href="/balance?nome=enki71">Ver enki71</a>`)) })
+  http.ListenAndServe(":"+port, nil)
 }
