@@ -2,6 +2,7 @@ package main
 
 import (
   "encoding/json"
+"fmt"
 "math/big"
   "net/http"
   "strings"
@@ -33,7 +34,7 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "net_version":
     result = "70101"
   case "eth_blockNumber":
-    result = "0x3e8"
+    result = fmt.Sprintf("0x%x", CurrentBlock())
   case "eth_gasPrice":
     result = "0x3b9aca00"
   case "eth_getBalance":
