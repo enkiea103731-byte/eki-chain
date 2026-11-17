@@ -49,7 +49,7 @@ limpos = append(limpos, p)
 }
 c.Pedidos = limpos
 // Garante saldo da Marta real
-c.Saldos["Marta"] = 200
+c.Saldos["Marta"] = 201
 }
 
 func save() {
