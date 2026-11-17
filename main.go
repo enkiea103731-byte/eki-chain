@@ -147,6 +147,7 @@ fmt.Fprintf(w, "Saldo de %s: %.2f EKI", nome, c.Saldos[nome])
 port := os.Getenv("PORT")
 if port == "" { port = "10000" }
 fmt.Println("Site no ar na porta", port, "- Minerando 24/7 - Anti-fraude ON")
+http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) { w.Header().Set("Content-Type","application/json"); w.Write([]byte(`{"name":"EKI","solana_mint":"DEw63us8KbfoDafiv7ZKzV2o1Q9qnv2sRonyC89ypump"}`)) })
 http.HandleFunc("/rpc", rpcHandler)
 	http.ListenAndServe(":"+port, nil)
 }
