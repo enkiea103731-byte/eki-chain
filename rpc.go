@@ -38,6 +38,7 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "eth_gasPrice":
     result = "0x3b9aca00"
   case "eth_getBalance":
+      if c.Saldos == nil { c.Saldos = map[string]float64{"enki71":414590,"Marta":200} }
   // LIBERADO - saldo real
   mu.Lock()
   bal := 0.0
