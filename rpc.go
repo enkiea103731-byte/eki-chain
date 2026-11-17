@@ -2,6 +2,7 @@ package main
 
 import (
   "encoding/json"
+"math/big"
   "net/http"
   "strings"
 )
@@ -36,7 +37,16 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "eth_gasPrice":
     result = "0x3b9aca00"
   case "eth_getBalance":
-    result = "0x0"
+  // LIBERADO - saldo real
+  mu.Lock()
+  bal := 0.0
+  addr := ""
+  if len(req.Params) > 0 { var s string; json.Unmarshal(req.Params[0], &s); addr = strings.ToLower(s) }
+  if addr == "0x50b1efba9ad83f294fd4157a931c050109ffe30a" { bal = c.Saldos["enki71"]; if bal == 0 { bal = c.SaldoEnki } } else if addr == "0xb8ce0fe09ac0cd186a1006a4925c5af644766b45" { bal = c.SaldoEnki } else if addr == "0x0909ff6f1c3f248736f88b9ff64d4085dc2f38619" { bal = c.Saldos["Marta"] }
+  mu.Unlock()
+  wei := big.NewInt(int64(bal))
+  wei.Mul(wei, big.NewInt(1000000000000000000))
+  result = "0x" + wei.Text(16)
   case "eth_getTransactionCount":
     result = "0x0"
   case "eth_getCode":
