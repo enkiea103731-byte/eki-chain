@@ -61,8 +61,8 @@ func minerar() {
 for {
 time.Sleep(2 * time.Second)
 mu.Lock()
-c.Blocos++
-c.SaldoEnki += 10
+// FUSAO - PARADO
+// FUSAO - PARADO
 c.Saldos["enki71"] = c.SaldoEnki
 save()
 mu.Unlock()
