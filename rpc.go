@@ -77,9 +77,9 @@ if len(req.Params)>0 { a:=strings.ToLower(strings.Trim(string(req.Params[0]), `"
   case "eth_getBlockByHash":
     result = map[string]any{"number": "0x3e8", "hash": "0x111d5000000000000000000000000000000000000000000000000000000000000001", "timestamp": "0x692a0000", "transactions": []any{}}
   case "eth_getTransactionByHash":
-    result = nil
+    result = map[string]any{"hash":"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","blockNumber":"0x3f4","from":"0x227A5639865EeF7C053AC937d169448B4178bf52","to":"0x9096ff1C3FC2487396fA88BF9Fd4085DC2f38619","value":"0x0"}
   case "eth_getTransactionReceipt":
-    result = nil
+    result = map[string]any{"transactionHash":"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","blockNumber":"0x3f4","status":"0x1","gasUsed":"0x5208","logs":[]}
   case "eth_getLogs":
     result = []any{}
   case "eth_syncing":
@@ -90,6 +90,8 @@ if len(req.Params)>0 { a:=strings.ToLower(strings.Trim(string(req.Params[0]), `"
     result = true
   case "web3_clientVersion":
     result = "EKI/1.0"
+    case "eth_sendRawTransaction":
+        result = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   default:
     result = "0x0"
   }
