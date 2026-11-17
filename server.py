@@ -9,16 +9,6 @@ START = int(time.time())
 DB = 'eki_pro.db'
 OWNER = '0x5d3f7f34ea94fe40ae783a258e246e293cbac206'
 USER_ADDR = '0xb8ce0fe09ac0cd186a1006a4925c5af644766b45'
-MINHA_CARTEIRA = '0x50b1efba9ad83f294fd4157a931c050109ffe30a'
-# SEED - sempre recria se o Render apagar
-def seed():
-    try:
-        cur.execute("INSERT OR IGNORE INTO balances(addr,balance,staked) VALUES(?,?,0)", (USER_ADDR.lower(), 1000000))
-        cur.execute("INSERT OR IGNORE INTO balances(addr,balance,staked) VALUES(?,?,0)", (MINHA_CARTEIRA.lower(), 414590))
-        con.commit()
-seed()
-    except: pass
-
 
 # --- BANCO PRO (SQLite, persiste) ---
 con = sqlite3.connect(DB, check_same_thread=False)
