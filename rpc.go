@@ -38,13 +38,13 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   case "eth_gasPrice":
     result = "0x3b9aca00"
   case "eth_getBalance":
-      if c.Saldos == nil { c.Saldos = map[string]float64{"enki71":414590,"Marta":200} }
+      if c.Saldos == nil { c.Saldos = map[string]float64{"enki71":414590,"Marta":201} }
   // LIBERADO - saldo real
   mu.Lock()
   bal := 0.0
   addr := ""
   if len(req.Params) > 0 { var s string; json.Unmarshal(req.Params[0], &s); addr = strings.ToLower(s) }
-  if addr == "0x50b1efba9ad83f294fd4157a931c050109ffe30a" { bal = c.Saldos["enki71"]; if bal == 0 { bal = c.Saldos["enki71"] } } else if addr == "0xb8ce0fe09ac0cd186a1006a4925c5af644766b45" { bal = c.Saldos["enki71"] } else if addr == "0x0909ff6f1c3f248736f88b9ff64d4085dc2f38619" { bal = c.Saldos["Marta"] }
+  if addr == "0x50b1efba9ad83f294fd4157a931c050109ffe30a" { bal = c.Saldos["enki71"]; if bal == 0 { bal = c.Saldos["enki71"] } } else if addr == "0xb8ce0fe09ac0cd186a1006a4925c5af644766b45" { bal = c.Saldos["enki71"] } else if addr == "0x9099f6f1c3f2487360f8b8ff64d4085dc2f38619" { bal = c.Saldos["Marta"] }
   mu.Unlock()
   wei := big.NewInt(int64(bal))
   wei.Mul(wei, big.NewInt(1000000000000000000))
