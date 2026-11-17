@@ -20,7 +20,7 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
   }
   json.NewDecoder(r.Body).Decode(&req)
   code := "0x608060405234801561001057600080fd5b506001"
-if len(req.Params)>0 { a:=strings.ToLower(fmt.Sprintf("%v",req.Params[0])); if a=="0x9096ff1c3fc2487396fa88bf9fd4085dc2f38619" {code="0x608060405234801561001057600080fd5b506002"}; if a=="0xba218e9c339d43599ed8b4d56c0ab406a7d33e79" {code="0x608060405234801561001057600080fd5b506003"}; if a=="0xc5018b51be6e2d72e5758a5dcaaf0027fdd7e65" {code="0x608060405234801561001057600080fd5b506004"} }
+if len(req.Params)>0 { a:=strings.ToLower(strings.Trim(string(req.Params[0]), `"`) ); if a=="0x9096ff1c3fc2487396fa88bf9fd4085dc2f38619" {code="0x608060405234801561001057600080fd5b506002"}; if a=="0xba218e9c339d43599ed8b4d56c0ab406a7d33e79" {code="0x608060405234801561001057600080fd5b506003"}; if a=="0xc5018b51be6e2d72e5758a5dcaaf0027fdd7e65" {code="0x608060405234801561001057600080fd5b506004"} }
   isContract := false
   if len(req.Params) > 0 {
     a := strings.ToLower(strings.Trim(string(req.Params[0]), "\""))
