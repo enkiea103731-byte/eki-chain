@@ -1,8 +1,11 @@
 services:
-  - type: web
-    name: enkiea103731-byte
-    env: node
-    region: oregon
+    - type: web
+    name: eki-chain
+    env: docker
     branch: main
-    buildCommand: npm install
-    startCommand: npx serve site -l $PORT
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+            - key: PORT
+        value: 10000
